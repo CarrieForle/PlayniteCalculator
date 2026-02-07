@@ -35,28 +35,36 @@
 			<Setter Property="FontSize" Value="24" />
 		</Style>
 	</UserControl.Resources>
-	<StackPanel Margin="25,0">
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
-			<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-			<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
-			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted}" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
-			<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
-			<TextBlock Style="{StaticResource BasicTextBlock}">
-				<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
-					<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
-				</Hyperlink>
-			</TextBlock>
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
-			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayMode}" ItemsSource="{Binding PlaytimeValues}" Width="300" />
-		</StackPanel>
-	</StackPanel>
+	<TabControl Margin="25,0">
+		<TabItem Header="{DynamicResource LOCCalculatorGeneralTab}">
+			<StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
+					<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+					<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
+					<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted}" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
+					<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
+					<TextBlock Style="{StaticResource BasicTextBlock}">
+							<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+								<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
+							</Hyperlink>
+					</TextBlock>
+				</StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
+					<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayMode}" ItemsSource="{Binding PlaytimeValues}" Width="300" />
+				</StackPanel>
+			</StackPanel>
+		</TabItem>
+		<TabItem Header="{DynamicResource LOCCalculatorColorTab}">
+			<StackPanel>
+			</StackPanel>
+		</TabItem>
+	</TabControl>
 </UserControl>

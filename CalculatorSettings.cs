@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Media;
 
 namespace Calculator
 {
@@ -18,6 +19,8 @@ namespace Calculator
 		private string country = DEFAULT_COUNTRY;
 		private PlaytimeDisplayMode mode = PlaytimeDisplayMode.HourMinute;
 		private bool paddingZero = true;
+		private Brush discountedPriceBrush;
+		private Brush regularPriceBrush;
 
 		public string MoneyFormat
 		{
@@ -55,6 +58,18 @@ namespace Calculator
 
 				SetValue(ref country, val);
 			}
+		}
+
+		public Brush RegularPriceBrush
+		{
+			get => regularPriceBrush;
+			set => SetValue(ref regularPriceBrush, value);
+		}
+
+		public Brush DiscountedPriceBrush
+		{
+			get => discountedPriceBrush;
+			set => SetValue(ref discountedPriceBrush, value);
 		}
 	}
 
@@ -156,7 +171,5 @@ namespace Calculator
 					break;
 			}
 		}
-
-		public IEnumerable<PlaytimeDisplayMode> PlaytimeValues => Enum.GetValues(typeof(PlaytimeDisplayMode)).Cast<PlaytimeDisplayMode>();
 	}
 }
