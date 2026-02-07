@@ -34,6 +34,16 @@ namespace Calculator
 			get => 12.3;
 		}
 
+		public double AveragePricePerHour
+		{
+			get => 5.3;
+		}
+
+		public int HoursSpent
+		{
+			get => 4222;
+		}
+
 		public SidebarView(CalculatorSettingsViewModel settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
 		{
 			settingsVm = settings;

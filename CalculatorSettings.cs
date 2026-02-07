@@ -9,7 +9,9 @@ namespace Calculator
 	public class CalculatorSettings : ObservableObject
 	{
 		public const string DEFAULT_MONEY_FORMAT = "${0:N2}";
+		public const string DEFAULT_COUNTRY = "US";
 		private string moneyFormat = DEFAULT_MONEY_FORMAT;
+		private string country = DEFAULT_COUNTRY;
 
 		public string MoneyFormat
 		{
@@ -18,6 +20,26 @@ namespace Calculator
 			{
 				SetValue(ref moneyFormat, value);
 				OnPropertyChanged(nameof(MoneyFormatted));
+			}
+		}
+
+		public string Country
+		{
+			get => country;
+			set
+			{
+				string val;
+
+				if (string.IsNullOrEmpty(value))
+				{
+					val = DEFAULT_COUNTRY;
+				}
+				else
+				{
+					val = value.ToUpper().Trim();
+				}
+
+				SetValue(ref country, val);
 			}
 		}
 
@@ -102,6 +124,11 @@ namespace Calculator
 			catch
 			{
 				errors.Add($"{ResourceProvider.GetString("LOCCalculatorMoneyFormatLabel")} {ResourceProvider.GetString("LOCCalculatorInvalidFormat")}");
+			}
+
+			if (Settings.Country.Length != 2)
+			{
+				errors.Add($"{ResourceProvider.GetString("LOCCalculatorCountryLabel")} {ResourceProvider.GetString("LOCCalculatorCountryInvalidLength")}");
 			}
 
 			return !errors.HasItems();

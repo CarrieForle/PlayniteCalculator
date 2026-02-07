@@ -13,14 +13,19 @@ namespace Calculator
 	public class Calculator : GenericPlugin
 	{
 		private static readonly ILogger logger = LogManager.GetLogger();
-		private CalculatorSettingsViewModel settings;
+		private readonly CalculatorSettingsViewModel settingsVm;
+		private CalculatorSettings Settings
+		{
+			get => settingsVm.Settings;
+		}
+
 		private readonly ItadApi api;
 
 		public override Guid Id { get; } = Guid.Parse("e5da871f-1b18-424b-8bea-ab829b044da9");
 
 		public Calculator(IPlayniteAPI api) : base(api)
 		{
-			settings = new CalculatorSettingsViewModel(this);
+			settingsVm = new CalculatorSettingsViewModel(this);
 			Properties = new GenericPluginProperties
 			{
 				HasSettings = true
@@ -30,7 +35,7 @@ namespace Calculator
 
 		public override ISettings GetSettings(bool firstRunSettings)
 		{
-			return settings;
+			return settingsVm;
 		}
 
 		public override UserControl GetSettingsView(bool firstRunSettings)
@@ -46,7 +51,7 @@ namespace Calculator
 				{
 					var control = new SidebarItemControl();
 					control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
-					control.AddContent(new SidebarView(settings, PlayniteApi, null));
+					control.AddContent(new SidebarView(settingsVm, PlayniteApi, null));
 					return control;
 					var games = PlayniteApi.Database.Games;
 					IDictionary<Game, HistoricalLowOutput> historicalLows = null;
@@ -62,7 +67,7 @@ namespace Calculator
 						actionRes.Error is null
 					)
 					{
-						return new SidebarView(settings, PlayniteApi, historicalLows);
+						return new SidebarView(settingsVm, PlayniteApi, historicalLows);
 					}
 					else
 					{
@@ -114,7 +119,7 @@ namespace Calculator
 				}
 			}
 
-			var historicalLowOutputs = await api.HistoricalLow(historicalLowInputs);
+			var historicalLowOutputs = await api.HistoricalLow(historicalLowInputs, Settings.Country);
 			var res = new Dictionary<Game, HistoricalLowOutput>();
 
 			foreach (var pair in historicalLowOutputs)

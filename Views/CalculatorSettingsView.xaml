@@ -3,6 +3,7 @@
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:local="clr-namespace:Calculator"
 			 mc:Ignorable="d"
 			 d:DesignHeight="400" d:DesignWidth="600">
 	<UserControl.Resources>
@@ -41,6 +42,15 @@
 		<StackPanel Orientation="Horizontal">
 			<TextBlock Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
 			<TextBlock Text="{Binding Settings.MoneyFormatted}" />
+		</StackPanel>
+		<StackPanel Orientation="Horizontal">
+			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
+			<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
+			<TextBlock>
+				<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+					<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
+				</Hyperlink>
+			</TextBlock>
 		</StackPanel>
 	</StackPanel>
 </UserControl>

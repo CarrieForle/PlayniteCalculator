@@ -3,6 +3,7 @@ using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,13 +39,12 @@ namespace Calculator
 			return res;
 		}
 
-		// TODO add currency
 		/// <summary>
 		/// Get historical low price of the games
 		/// </summary>
 		/// <param name="input">A list of ITAD game ID categorized by their lookup shop</param>
 		/// <returns>A dictionary of games' ITAD IDs and their price info</returns>
-		public async Task<IDictionary<HistoricalLowKey, HistoricalLowOutput>> HistoricalLow(IDictionary<ItadShop, ICollection<string>> input)
+		public async Task<IDictionary<HistoricalLowKey, HistoricalLowOutput>> HistoricalLow(IDictionary<ItadShop, ICollection<string>> input, string country)
 		{
 			// ITAD accepts at most 200 games per request.
 			var historicalLowInputs = new Dictionary<ItadShop, List<List<string>>>();
@@ -78,7 +78,7 @@ namespace Calculator
 				var itadIdChunks = pair.Value;
 				foreach (var chunk in itadIdChunks)
 				{
-					var task = Client.PostAsync($"https://api.isthereanydeal.com/games/storelow/v2?key={API_KEY}&shops={(int)shop}", JsonContentOf(chunk))
+					var task = Client.PostAsync($"https://api.isthereanydeal.com/games/storelow/v2?key={API_KEY}&shops={(int)shop}&country={country}", JsonContentOf(chunk))
 						.ContinueWith(async (t) =>
 						{
 							var response = t.Result;

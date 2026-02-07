@@ -50,8 +50,8 @@
   <ItemGroup>
     <Compile Include="Calculator.cs" />
     <Compile Include="CalculatorSettings.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="CommonPluginsShared\Controls\SidebarItemControl.cs" />
-    <Compile Include="Currency.cs" />
     <Compile Include="Exception.cs" />
     <Compile Include="ItadApi.cs" />
     <Compile Include="Views\CalculatorSettingsView.xaml.cs">
@@ -100,5 +100,6 @@
   <ItemGroup>
     <None Include="CommonPluginsShared\LICENSE" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
