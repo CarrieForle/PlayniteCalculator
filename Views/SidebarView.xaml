@@ -7,68 +7,50 @@
 			 mc:Ignorable="d"
 			 d:DesignHeight="800" d:DesignWidth="1100">
 	<UserControl.Resources>
-		<Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
-			<Setter Property="VerticalAlignment" Value="Center" />
-			<Setter Property="Margin" Value="5" />
-		</Style>
-		<Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-			<Setter Property="VerticalAlignment" Value="Center" />
-			<Setter Property="Margin" Value="5" />
-		</Style>
-		<Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
-			<Setter Property="Margin" Value="5" />
-			<Setter Property="VerticalAlignment" Value="Center" />
-		</Style>
-		<Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
-			<Setter Property="Margin" Value="5" />
-			<Setter Property="VerticalAlignment" Value="Center" />
-		</Style>
-		<Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-			<Setter Property="Margin" Value="5" />
-		</Style>
-		<Style TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
-			<Setter Property="Margin" Value="5" />
-		</Style>
-		<Style x:Key="BigStat" TargetType="TextBlock">
-			<Setter Property="FontSize" Value="24" />
-		</Style>
-		<Style x:Key="LabelStyle" TargetType="TextBlock">
+		<Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}" />
+		<Style x:Key="LabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
 			<Setter Property="Foreground" Value="#888888"/>
-			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontSize" Value="14"/>
 			<Setter Property="FontStyle" Value="Italic"/>
 			<Setter Property="Margin" Value="0,0,0,10"/>
 		</Style>
-		<Style x:Key="ValueStyle" TargetType="TextBlock">
-			<Setter Property="Foreground" Value="White"/>
+		<Style x:Key="ValueStyle" TargetType="TextBlock"  BasedOn="{StaticResource BaseTextBlockStyle}">
 			<Setter Property="FontSize" Value="36"/>
-			<Setter Property="FontWeight" Value="Light"/>
+		</Style>
+		<Style x:Key="Card" TargetType="StackPanel">
+			<Setter Property="Margin" Value="30"/>
 		</Style>
 	</UserControl.Resources>
-	<StackPanel>
+	<StackPanel MaxWidth="1000" Margin="0,100,0,0">
 		<TextBlock Text="Account Value" FontSize="28" HorizontalAlignment="Center"/>
-			<WrapPanel Orientation="Horizontal" >
-				<StackPanel Margin="30,0">
-					<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" 
-								   Foreground="#00ff00" FontSize="48" FontWeight="Bold"/>
-					<TextBlock Text="lowest prices" Foreground="#888888" FontSize="12" HorizontalAlignment="Center"/>
-				</StackPanel>
-				<StackPanel Margin="30,0">
-					<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" Foreground="#ff7b5a" FontSize="48" FontWeight="Bold"/>
-					<TextBlock Text="Today's prices" Foreground="#888888" />
-				</StackPanel>
-			</WrapPanel>
-		<WrapPanel VerticalAlignment="Bottom" Margin="0,40,0,0">
-			<StackPanel>
+		<WrapPanel HorizontalAlignment="Center"  Orientation="Horizontal" >
+			<StackPanel Margin="30,0">
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" Foreground="#00ff00" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="Lowest prices" Foreground="#888888" HorizontalAlignment="Center" />
+			</StackPanel>
+			<StackPanel Margin="30,0">
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" Foreground="#ff7b5a" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="Today's prices" Foreground="#888888" HorizontalAlignment="Center" />
+			</StackPanel>
+		</WrapPanel>
+		<StackPanel Margin="100,0">
+			<TextBlock Text="{Binding GamesPlayedInfo, Mode=OneTime}" />
+			<Border CornerRadius="10" BorderThickness="1">
+				<ProgressBar Height="10" Value="{Binding PlayedGamesRatio, Mode=OneTime}" Maximum="1" />
+			</Border>
+		</StackPanel>
+		<WrapPanel HorizontalAlignment="Center">
+			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Average price" Style="{StaticResource LabelStyle}"/>
 				<TextBlock Text="{local:MoneyBinding AveragePrice}" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
-			<StackPanel>
+			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Average price per hour" Style="{StaticResource LabelStyle}"/>
 				<TextBlock Text="{local:MoneyBinding PricePerHour}" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
-			<StackPanel>
+			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Total Playtime" Style="{StaticResource LabelStyle}"/>
-				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}}" Style="{StaticResource ValueStyle}"/>
+				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}, Mode=OneTime}" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 		</WrapPanel>
 	</StackPanel>
