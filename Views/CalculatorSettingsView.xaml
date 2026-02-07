@@ -5,10 +5,42 @@
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 mc:Ignorable="d"
 			 d:DesignHeight="400" d:DesignWidth="600">
-	<StackPanel>
-		<TextBlock Text="Description for Option1:"/>
-		<TextBox Text="{Binding Settings.Option1}"/>
-		<TextBlock Text="Description for Option2:"/>
-		<CheckBox IsChecked="{Binding Settings.Option2}"/>
+	<UserControl.Resources>
+		<Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+			<Setter Property="VerticalAlignment" Value="Center" />
+			<Setter Property="Margin" Value="5" />
+		</Style>
+		<Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+			<Setter Property="VerticalAlignment" Value="Center" />
+			<Setter Property="Margin" Value="5" />
+		</Style>
+		<Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+			<Setter Property="Margin" Value="5" />
+			<Setter Property="VerticalAlignment" Value="Center" />
+		</Style>
+		<Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+			<Setter Property="Margin" Value="5" />
+			<Setter Property="VerticalAlignment" Value="Center" />
+		</Style>
+		<Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+			<Setter Property="Margin" Value="5" />
+		</Style>
+		<Style TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+			<Setter Property="Margin" Value="5" />
+		</Style>
+		<Style x:Key="BigStat" TargetType="TextBlock">
+			<Setter Property="FontSize" Value="24" />
+		</Style>
+	</UserControl.Resources>
+	<StackPanel Margin="25,0">
+		<StackPanel Orientation="Horizontal">
+			<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
+			<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+			<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
+		</StackPanel>
+		<StackPanel Orientation="Horizontal">
+			<TextBlock Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
+			<TextBlock Text="{Binding Settings.MoneyFormatted}" />
+		</StackPanel>
 	</StackPanel>
 </UserControl>
