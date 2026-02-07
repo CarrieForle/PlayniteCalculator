@@ -7,7 +7,9 @@
 			 mc:Ignorable="d"
 			 d:DesignHeight="400" d:DesignWidth="600">
 	<UserControl.Resources>
-		<Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+		<Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+		</Style>
+		<Style x:Key="BasicTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
 			<Setter Property="VerticalAlignment" Value="Center" />
 			<Setter Property="Margin" Value="5" />
 		</Style>
@@ -40,17 +42,21 @@
 			<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
-			<TextBlock Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
-			<TextBlock Text="{Binding Settings.MoneyFormatted}" />
+			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
+			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted}" />
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
 			<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
-			<TextBlock>
+			<TextBlock Style="{StaticResource BasicTextBlock}">
 				<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
 					<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
 				</Hyperlink>
 			</TextBlock>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal">
+			<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
+			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayMode}" ItemsSource="{Binding PlaytimeValues}" Width="300" />
 		</StackPanel>
 	</StackPanel>
 </UserControl>

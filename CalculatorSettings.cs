@@ -1,10 +1,14 @@
 using Playnite.SDK;
 using Playnite.SDK.Data;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace Calculator
 {
 	using static CalculatorSettings;
+	using static PlaytimeHelper;
 
 	public class CalculatorSettings : ObservableObject
 	{
@@ -12,15 +16,25 @@ namespace Calculator
 		public const string DEFAULT_COUNTRY = "US";
 		private string moneyFormat = DEFAULT_MONEY_FORMAT;
 		private string country = DEFAULT_COUNTRY;
+		private PlaytimeDisplayMode mode = PlaytimeDisplayMode.HourMinute;
+		private bool paddingZero = true;
 
 		public string MoneyFormat
 		{
 			get => moneyFormat;
-			set
-			{
-				SetValue(ref moneyFormat, value);
-				OnPropertyChanged(nameof(MoneyFormatted));
-			}
+			set => SetValue(ref moneyFormat, value);
+		}
+
+		public PlaytimeDisplayMode PlaytimeDisplayMode
+		{
+			get => mode;
+			set => SetValue(ref mode, value);
+		}
+
+		public bool PlaytimePaddingZero
+		{
+			get => paddingZero;
+			set => SetValue(ref paddingZero, value);
 		}
 
 		public string Country
@@ -42,39 +56,19 @@ namespace Calculator
 				SetValue(ref country, val);
 			}
 		}
-
-		[DontSerialize]
-		public string MoneyFormatted
-		{
-			get
-			{
-				try
-				{
-					return string.Format(moneyFormat, 1234.56);
-				}
-				catch
-				{
-					return ResourceProvider.GetString("LOCCalculatorInvalidFormat");
-				}
-			}
-		}
 	}
 
 	public class CalculatorSettingsViewModel : ObservableObject, ISettings
 	{
 		private readonly Calculator plugin;
-		private CalculatorSettings editingClone { get; set; }
+		private CalculatorSettings backup { get; set; }
 		public RelayCommand ResetFormat { get; }
 
 		private CalculatorSettings settings;
 		public CalculatorSettings Settings
 		{
 			get => settings;
-			set
-			{
-				settings = value;
-				OnPropertyChanged();
-			}
+			set => SetValue(ref settings, value);
 		}
 
 		public CalculatorSettingsViewModel(Calculator plugin)
@@ -100,16 +94,19 @@ namespace Calculator
 
 		public void BeginEdit()
 		{
-			editingClone = Serialization.GetClone(Settings);
+			backup = Serialization.GetClone(Settings);
+			Settings.PropertyChanged += ReactOnSettingsChanged;
 		}
 
 		public void CancelEdit()
 		{
-			Settings = editingClone;
+			Settings.PropertyChanged -= ReactOnSettingsChanged;
+			Settings = backup;
 		}
 
 		public void EndEdit()
 		{
+			Settings.PropertyChanged -= ReactOnSettingsChanged;
 			plugin.SavePluginSettings(Settings);
 		}
 
@@ -133,5 +130,33 @@ namespace Calculator
 
 			return !errors.HasItems();
 		}
+
+		public string MoneyFormatted
+		{
+			get
+			{
+				try
+				{
+					return string.Format(Settings.MoneyFormat, 1234.56);
+				}
+				catch
+				{
+					return ResourceProvider.GetString("LOCCalculatorInvalidFormat");
+				}
+			}
+		}
+
+		// Need this in order to place MoneyFormatted here.
+		private void ReactOnSettingsChanged(object s, PropertyChangedEventArgs e)
+		{
+			switch (e.PropertyName)
+			{
+				case nameof(Settings.MoneyFormat):
+					OnPropertyChanged(nameof(MoneyFormatted));
+					break;
+			}
+		}
+
+		public IEnumerable<PlaytimeDisplayMode> PlaytimeValues => Enum.GetValues(typeof(PlaytimeDisplayMode)).Cast<PlaytimeDisplayMode>();
 	}
 }

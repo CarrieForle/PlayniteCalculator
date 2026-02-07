@@ -51,7 +51,7 @@ namespace Calculator
 				{
 					var control = new SidebarItemControl();
 					control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
-					control.AddContent(new SidebarView(settingsVm, PlayniteApi, null));
+					control.AddContent(new SidebarView(Settings, PlayniteApi, null));
 					return control;
 					var games = PlayniteApi.Database.Games;
 					IDictionary<Game, HistoricalLowOutput> historicalLows = null;
@@ -67,7 +67,7 @@ namespace Calculator
 						actionRes.Error is null
 					)
 					{
-						return new SidebarView(settingsVm, PlayniteApi, historicalLows);
+						return new SidebarView(Settings, PlayniteApi, historicalLows);
 					}
 					else
 					{

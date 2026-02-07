@@ -10,4 +10,5 @@
 	<sys:String x:Key="LOCCalculatorCountryInvalidLength">Country must be 2 letters</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryToolTip">Use the format of ISO 3166-1 Alpha-2</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryTableLinkText">Country Table</sys:String>
+	<sys:String x:Key="LOCCalculatorPlaytimeLabel">Playtime display:</sys:String>
 </ResourceDictionary>

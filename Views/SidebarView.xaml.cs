@@ -7,13 +7,13 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Markup;
+using static Calculator.PlaytimeHelper;
 
 namespace Calculator
 {
 	public partial class SidebarView : UserControl
 	{
-		private readonly CalculatorSettingsViewModel settingsVm;
-		public CalculatorSettings Settings { get => settingsVm.Settings; }
+		public CalculatorSettings Settings { get; }
 		public IDictionary<Game, HistoricalLowOutput> HistoricalLows { get; }
 		public IPlayniteAPI PlayniteApi { get; }
 		public double TotalSpentIfRegularPrice
@@ -34,21 +34,21 @@ namespace Calculator
 			get => 12.3;
 		}
 
-		public double AveragePricePerHour
-		{
-			get => 5.3;
-		}
+		public double PricePerHour => 5.3;
 
-		public int HoursSpent
-		{
-			get => 4222;
-		}
+		// Sum() does not support ulong
+		public ulong TotalPlaytime => PlayniteApi.Database.Games.Aggregate(
+			0UL,
+			(a, g) => a + g.Playtime
+		);
 
-		public SidebarView(CalculatorSettingsViewModel settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
+		public SidebarView(CalculatorSettings settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
 		{
-			settingsVm = settings;
+			Settings = settings;
 			PlayniteApi = api;
 			HistoricalLows = historicalLows;
+			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayMode, Settings.PlaytimePaddingZero);
+			Resources.Add("PlaytimeConverter", playtimeConverter);
 			DataContext = this;
 			InitializeComponent();
 		}
@@ -70,6 +70,30 @@ namespace Calculator
 		}
 	}
 
+	[ValueConversion(typeof(ulong), typeof(string))]
+	public class PlaytimeConverter : IValueConverter
+	{
+		private PlaytimeDisplayMode mode;
+		private bool paddingZero = false;
+
+		public PlaytimeConverter(PlaytimeDisplayMode mode, bool paddingZero)
+		{
+			this.mode = mode;
+			this.paddingZero = paddingZero;
+		}
+
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			ulong seconds = (ulong)value;
+			return PlaytimeToString(mode, paddingZero, seconds);
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
 	public class MoneyBinding : MarkupExtension
 	{
 		public string Path { get; set; }
@@ -81,7 +105,11 @@ namespace Calculator
 
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{
-			var multiBinding = new MultiBinding { Converter = new NumberFormatConverter() };
+			var multiBinding = new MultiBinding
+			{
+				Converter = new NumberFormatConverter(),
+				Mode = BindingMode.OneTime,
+			};
 
 			multiBinding.Bindings.Add(new Binding(Path));
 			multiBinding.Bindings.Add(new Binding("Settings.MoneyFormat"));

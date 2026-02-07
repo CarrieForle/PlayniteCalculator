@@ -54,6 +54,7 @@
     <Compile Include="CommonPluginsShared\Controls\SidebarItemControl.cs" />
     <Compile Include="Exception.cs" />
     <Compile Include="ItadApi.cs" />
+    <Compile Include="PlaytimeHelper.cs" />
     <Compile Include="Views\CalculatorSettingsView.xaml.cs">
       <DependentUpon>CalculatorSettingsView.xaml</DependentUpon>
     </Compile>
