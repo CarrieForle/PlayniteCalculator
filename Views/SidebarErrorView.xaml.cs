@@ -3,14 +3,15 @@ using System.Windows.Controls;
 
 namespace Calculator
 {
-    public partial class SidebarErrorView : UserControl
-    {
-        public Exception exception { get; }
+	public partial class SidebarErrorView : UserControl
+	{
+		public Exception Error { get; }
 
-        public SidebarErrorView(Exception exception = null)
-        {
-            this.exception = exception;
-            InitializeComponent();
-        }
-    }
+		public SidebarErrorView(Exception exception)
+		{
+			DataContext = this;
+			Error = exception;
+			InitializeComponent();
+		}
+	}
 }

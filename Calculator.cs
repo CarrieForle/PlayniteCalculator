@@ -66,7 +66,7 @@ namespace Calculator
 					}
 					else
 					{
-						return new SidebarErrorView(actionRes.Error);
+						return new SidebarView(actionRes.Error);
 					}
 				},
 				Closed = () =>
