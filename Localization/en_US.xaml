@@ -4,12 +4,13 @@
 	<sys:String x:Key="LOCCalculator">Calculator</sys:String>
 	<sys:String x:Key="LOCCalculatorMoneyFormatLabel">Money Format:</sys:String>
 	<sys:String x:Key="LOCCalculatorResetFormat">Reset</sys:String>
+	<sys:String x:Key="LOCCalculatorMoneyFormatHelpLinkText">How to write format?</sys:String>
 	<sys:String x:Key="LOCCalculatorPreviewFormatLabel">Preview:</sys:String>
 	<sys:String x:Key="LOCCalculatorInvalidFormat">Invalid format</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryLabel">Country:</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryInvalidLength">Country must be 2 letters</sys:String>
-	<sys:String x:Key="LOCCalculatorCountryToolTip">Use the format of ISO 3166-1 Alpha-2</sys:String>
-	<sys:String x:Key="LOCCalculatorCountryTableLinkText">Country Table</sys:String>
+	<sys:String x:Key="LOCCalculatorCountryToolTip">Use the format of ISO 3166-1 Alpha-2. It should be two letter</sys:String>
+	<sys:String x:Key="LOCCalculatorCountryTableLinkText">Country Code Table</sys:String>
 	<sys:String x:Key="LOCCalculatorPlaytimeLabel">Playtime display:</sys:String>
 	<sys:String x:Key="LOCCalculatorAutomaticUpdateLabel">Automatically recalculate statistic:</sys:String>
 	<sys:String x:Key="LOCCalculatorItadRequestDialog">Helping you get disappointed in your life...</sys:String>

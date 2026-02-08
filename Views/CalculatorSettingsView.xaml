@@ -44,6 +44,11 @@
 			<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
 			<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 			<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
+			<TextBlock Style="{StaticResource BasicTextBlock}">
+				<Hyperlink NavigateUri="https://learn.microsoft.com/dotnet/standard/base-types/standard-numeric-format-strings#standard-format-specifiers" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+					<Run Text="{DynamicResource LOCCalculatorMoneyFormatHelpLinkText}" />
+				</Hyperlink>
+			</TextBlock>
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
@@ -53,9 +58,9 @@
 			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
 			<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
 			<TextBlock Style="{StaticResource BasicTextBlock}">
-						<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
-							<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
-						</Hyperlink>
+				<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+					<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
+				</Hyperlink>
 			</TextBlock>
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
