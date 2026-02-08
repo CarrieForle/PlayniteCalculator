@@ -6,15 +6,12 @@ namespace Calculator
 {
 	public class Commands
 	{
-		public static RelayCommand<object> NavigateUri = new RelayCommand<object>((val) =>
+		public static RelayCommand<Uri> NavigateUri = new RelayCommand<Uri>((uri) =>
 		{
-			if (val is Uri uri)
+			Process.Start(new ProcessStartInfo(uri.AbsoluteUri)
 			{
-				Process.Start(new ProcessStartInfo(uri.AbsoluteUri)
-				{
-					UseShellExecute = true
-				});
-			}
+				UseShellExecute = true
+			});
 		});
 	}
 }

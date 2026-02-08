@@ -43,15 +43,22 @@ namespace Calculator
 			PlayniteApi = api;
 			HistoricalLows = historicalLows;
 
+			//playedGames = PlayniteApi.Database.Games.Where(g => g.Playtime >= 1).ToArray();
+			//totalSpentIfRegularPrice = HistoricalLows.Sum(pair => pair.Value.price);
+			//totalSpentIfDiscountedPrice = HistoricalLows.Sum(pair => pair.Value.lowPrice);
+			//averagePrice = HistoricalLows.Average(pair => pair.Value.price);
+			//totalPlaytime = PlayniteApi.Database.Games.Aggregate(
+			//	0UL,
+			//	(a, g) => a + g.Playtime
+			//);
+			//pricePerHour = totalSpentIfRegularPrice / (totalPlaytime / 3600.0);
+
 			playedGames = PlayniteApi.Database.Games.Where(g => g.Playtime >= 1).ToArray();
-			totalSpentIfRegularPrice = HistoricalLows.Sum(pair => pair.Value.price);
-			totalSpentIfDiscountedPrice = HistoricalLows.Sum(pair => pair.Value.lowPrice);
-			averagePrice = HistoricalLows.Average(pair => pair.Value.price);
-			totalPlaytime = PlayniteApi.Database.Games.Aggregate(
-				0UL,
-				(a, g) => a + g.Playtime
-			);
-			pricePerHour = totalSpentIfRegularPrice / (totalPlaytime / 3600.0);
+			totalSpentIfRegularPrice = 4238.32;
+			totalSpentIfDiscountedPrice = 372.32;
+			averagePrice = 5.32;
+			totalPlaytime = 689420;
+			pricePerHour = 6.32;
 
 			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayMode, Settings.PlaytimePaddingZero);
 			Resources.Add("PlaytimeConverter", playtimeConverter);

@@ -5,6 +5,7 @@
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 			 xmlns:local="clr-namespace:Calculator"
 			 mc:Ignorable="d"
+			 d:DataContext="{d:DesignInstance Type=local:SidebarView}"
 			 d:DesignHeight="800" d:DesignWidth="1100">
 	<UserControl.Resources>
 		<Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}" />
@@ -25,19 +26,23 @@
 		<TextBlock Text="Account Value" FontSize="28" HorizontalAlignment="Center"/>
 		<WrapPanel HorizontalAlignment="Center"  Orientation="Horizontal" >
 			<StackPanel Margin="30,0">
-				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" Foreground="#00ff00" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" Foreground="{Binding Settings.DicountedPriceBrush}" FontSize="48" FontWeight="Bold"/>
 				<TextBlock Text="Lowest prices" Foreground="#888888" HorizontalAlignment="Center" />
 			</StackPanel>
 			<StackPanel Margin="30,0">
-				<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" Foreground="#ff7b5a" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" Foreground="{Binding Settings.RegularPriceBrush}" FontSize="48" FontWeight="Bold"/>
 				<TextBlock Text="Today's prices" Foreground="#888888" HorizontalAlignment="Center" />
 			</StackPanel>
 		</WrapPanel>
 		<StackPanel Margin="100,0">
 			<TextBlock Text="{Binding GamesPlayedInfo, Mode=OneTime}" />
-			<Border CornerRadius="10" BorderThickness="1">
-				<ProgressBar Height="10" Value="{Binding PlayedGamesRatio, Mode=OneTime}" Maximum="1" />
-			</Border>
+			<ProgressBar Height="10" Value="{Binding PlayedGamesRatio, Mode=OneTime}" Maximum="1">
+				<ProgressBar.Resources>
+					<Style TargetType="{x:Type Border}">
+						<Setter Property="CornerRadius" Value="5"/>
+					</Style>
+				</ProgressBar.Resources>
+			</ProgressBar>
 		</StackPanel>
 		<WrapPanel HorizontalAlignment="Center">
 			<StackPanel Style="{StaticResource Card}">

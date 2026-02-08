@@ -51,28 +51,32 @@ namespace Calculator
 				{
 					var control = new SidebarItemControl();
 					control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
-					var games = PlayniteApi.Database.Games;
-					IDictionary<Game, HistoricalLowOutput> historicalLows = null;
 
-					var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) => 
-					{
-						historicalLows = await GetHistoricalLow(games);
-					}, new GlobalProgressOptions("Helping you get disappointed in your life..."));
-
-					if (
-						!(historicalLows is null) &&
-						(actionRes.Result ?? false) && 
-						actionRes.Error is null
-					)
-					{
-						control.AddContent(new SidebarView(Settings, PlayniteApi, historicalLows));
-					}
-					else
-					{
-						control.AddContent(new SidebarErrorView(actionRes.Error));
-					}
-
+					control.AddContent(new SidebarView(Settings, PlayniteApi, null));
 					return control;
+
+					//var games = PlayniteApi.Database.Games;
+					//IDictionary<Game, HistoricalLowOutput> historicalLows = null;
+
+					//var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) => 
+					//{
+					//	historicalLows = await GetHistoricalLow(games);
+					//}, new GlobalProgressOptions("Helping you get disappointed in your life..."));
+
+					//if (
+					//	!(historicalLows is null) &&
+					//	(actionRes.Result ?? false) && 
+					//	actionRes.Error is null
+					//)
+					//{
+					//	control.AddContent(new SidebarView(Settings, PlayniteApi, historicalLows));
+					//}
+					//else
+					//{
+					//	control.AddContent(new SidebarErrorView(actionRes.Error));
+					//}
+
+					//return control;
 				},
 				Closed = () =>
 				{

@@ -1,15 +1,13 @@
 using Playnite.SDK;
 using Playnite.SDK.Data;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Media;
 
 namespace Calculator
 {
-	using static CalculatorSettings;
 	using static PlaytimeHelper;
+	using static CalculatorSettings;
 
 	public class CalculatorSettings : ObservableObject
 	{
@@ -19,8 +17,8 @@ namespace Calculator
 		private string country = DEFAULT_COUNTRY;
 		private PlaytimeDisplayMode mode = PlaytimeDisplayMode.HourMinute;
 		private bool paddingZero = true;
-		private Brush discountedPriceBrush;
-		private Brush regularPriceBrush;
+		private Brush discountedPriceBrush = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+		private Brush regularPriceBrush = new SolidColorBrush(Color.FromRgb(0xff, 0x7b, 0x5a));
 
 		public string MoneyFormat
 		{
@@ -92,7 +90,7 @@ namespace Calculator
 
 			var savedSettings = plugin.LoadPluginSettings<CalculatorSettings>();
 
-			if (savedSettings != null)
+			if (!(savedSettings is null))
 			{
 				Settings = savedSettings;
 			}
@@ -162,9 +160,9 @@ namespace Calculator
 		}
 
 		// Need this in order to place MoneyFormatted here.
-		private void ReactOnSettingsChanged(object s, PropertyChangedEventArgs e)
+		private void ReactOnSettingsChanged(object sender, PropertyChangedEventArgs eventArgs)
 		{
-			switch (e.PropertyName)
+			switch (eventArgs.PropertyName)
 			{
 				case nameof(Settings.MoneyFormat):
 					OnPropertyChanged(nameof(MoneyFormatted));

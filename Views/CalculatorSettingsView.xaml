@@ -4,6 +4,7 @@
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:local="clr-namespace:Calculator"
+			 d:DataContext="{d:DesignInstance Type=local:CalculatorSettingsView}"
 			 mc:Ignorable="d"
 			 d:DesignHeight="400" d:DesignWidth="600">
 	<UserControl.Resources>
@@ -62,8 +63,31 @@
 				</StackPanel>
 			</StackPanel>
 		</TabItem>
-		<TabItem Header="{DynamicResource LOCCalculatorColorTab}">
+		<TabItem Name="ColorTab" Header="{DynamicResource LOCCalculatorColorTab}">
 			<StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<Button Background="{Binding Settings.RegularPriceBrush}" Width="40" Height="40" Cursor="Hand" Click="SwitchToColorPicker">
+						<Button.Resources>
+							<Style TargetType="{x:Type Border}">
+								<Setter Property="CornerRadius" Value="5"/>
+							</Style>
+						</Button.Resources>
+					</Button>
+					<TextBlock VerticalAlignment="Center"  Text="Discounted price" />
+					<Button Content="Reset" Command="{Binding RestoreBrush}" VerticalAlignment="Center" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal">
+					<Button Background="{Binding Settings.DiscountedPriceBrush}" Width="40" Height="40" Cursor="Hand" Click="SwitchToColorPicker">
+						<Button.Resources>
+							<Style TargetType="{x:Type Border}">
+								<Setter Property="CornerRadius" Value="5"/>
+							</Style>
+						</Button.Resources>
+					</Button>
+					<TextBlock VerticalAlignment="Center" Text="Regular price" />
+					<Button Content="Reset" Command="{Binding RestoreBrush}" VerticalAlignment="Center" />
+				</StackPanel>
+				<Button Content="Reset to default" Command="{Binding RestoreDefaultBrush}" VerticalAlignment="Center" HorizontalAlignment="Left" />
 			</StackPanel>
 		</TabItem>
 	</TabControl>
