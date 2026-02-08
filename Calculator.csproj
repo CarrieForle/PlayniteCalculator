@@ -51,23 +51,14 @@
     <Compile Include="Calculator.cs" />
     <Compile Include="CalculatorSettings.cs" />
     <Compile Include="Commands.cs" />
-    <Compile Include="playnite-plugincommon\CommonPlayniteShared\Converters\InvertedBooleanToVisibilityConverter.cs" />
-    <Compile Include="playnite-plugincommon\CommonPlayniteShared\Converters\InvertedBoolenConverter.cs" />
-    <Compile Include="playnite-plugincommon\CommonPluginsControls\Controls\ControlPickerGradient.xaml.cs">
-      <DependentUpon>ControlPickerGradient.xaml</DependentUpon>
-    </Compile>
     <Compile Include="playnite-plugincommon\CommonPluginsShared\Controls\SidebarItemControl.cs" />
     <Compile Include="Exception.cs" />
     <Compile Include="ItadApi.cs" />
-    <Compile Include="playnite-plugincommon\CommonPluginsShared\UI.cs" />
     <Compile Include="PlaytimeHelper.cs" />
     <Compile Include="Views\CalculatorSettingsView.xaml.cs">
       <DependentUpon>CalculatorSettingsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Views\ColorPicker.xaml.cs">
-      <DependentUpon>ColorPicker.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\SidebarErrorView.xaml.cs">
       <DependentUpon>SidebarErrorView.xaml</DependentUpon>
     </Compile>
@@ -91,15 +82,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="playnite-plugincommon\CommonPluginsControls\Controls\ControlPickerGradient.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\CalculatorSettingsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\ColorPicker.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -117,12 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="playnite-plugincommon\LICENSE" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="ColorPickerWPF\akr.WPF.Controls.ColorPicker\akr.WPF.Controls.ColorPicker.csproj">
-      <Project>{214ebe94-3ac3-4260-8664-35d803139e89}</Project>
-      <Name>akr.WPF.Controls.ColorPicker</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,36 +1,45 @@
 using CommonPluginsShared.Controls;
 using Playnite.SDK;
+using Playnite.SDK.Data;
+using Playnite.SDK.Events;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace Calculator
 {
-	public class Calculator : GenericPlugin
+	public class Calculator : GenericPlugin, ICalculator
 	{
 		private static readonly ILogger logger = LogManager.GetLogger();
+		private readonly LibraryTracker libraryTracker;
 		private readonly CalculatorSettingsViewModel settingsVm;
+		private string cachePath;
+		private object cacheLock = new object();
+
 		private CalculatorSettings Settings
 		{
 			get => settingsVm.Settings;
 		}
 
-		private readonly ItadApi api;
+		private readonly ItadApi api = new ItadApi();
 
 		public override Guid Id { get; } = Guid.Parse("e5da871f-1b18-424b-8bea-ab829b044da9");
 
 		public Calculator(IPlayniteAPI api) : base(api)
 		{
-			settingsVm = new CalculatorSettingsViewModel(this);
 			Properties = new GenericPluginProperties
 			{
 				HasSettings = true
 			};
-			this.api = new ItadApi();
+
+			settingsVm = new CalculatorSettingsViewModel(this);
+			cachePath = $@"{GetPluginUserDataPath()}\cache.json";
+			libraryTracker = new LibraryTracker(api);
 		}
 
 		public override ISettings GetSettings(bool firstRunSettings)
@@ -43,40 +52,49 @@ namespace Calculator
 			return new CalculatorSettingsView();
 		}
 
+		public override void OnLibraryUpdated(OnLibraryUpdatedEventArgs args)
+		{
+			if (Settings.AutomaticUpdate == AutomaticUpdate.OnLibraryUpdate && libraryTracker.FoundNewGames)
+			{
+				GetHistoricalLowFromDisk();
+				libraryTracker.Reset();
+			}
+		}
+
 		public override IEnumerable<SidebarItem> GetSidebarItems()
 		{
 			yield return new SidebarItem
 			{
 				Opened = () =>
 				{
-					var control = new SidebarItemControl();
-					control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
+					var games = PlayniteApi.Database.Games;
+					IDictionary<Game, HistoricalLowOutput> historicalLows = null;
 
-					control.AddContent(new SidebarView(Settings, PlayniteApi, null));
-					return control;
+					if (Settings.AutomaticUpdate != AutomaticUpdate.OnEnteringView)
+					{
+						historicalLows = GetHistoricalLowFromDisk();
 
-					//var games = PlayniteApi.Database.Games;
-					//IDictionary<Game, HistoricalLowOutput> historicalLows = null;
+						if (!(historicalLows is null))
+						{
+							return SidebarView.Create(this, Settings, PlayniteApi, historicalLows);
+						}
+					}
 
-					//var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) => 
-					//{
-					//	historicalLows = await GetHistoricalLow(games);
-					//}, new GlobalProgressOptions("Helping you get disappointed in your life..."));
+					var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) =>
+					{
+						historicalLows = await GetHistoricalLow(games);
+					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
 
-					//if (
-					//	!(historicalLows is null) &&
-					//	(actionRes.Result ?? false) && 
-					//	actionRes.Error is null
-					//)
-					//{
-					//	control.AddContent(new SidebarView(Settings, PlayniteApi, historicalLows));
-					//}
-					//else
-					//{
-					//	control.AddContent(new SidebarErrorView(actionRes.Error));
-					//}
+					if (
+						historicalLows is null ||
+						!(actionRes.Result ?? false) ||
+						actionRes.Error is Exception
+					)
+					{
+						return SidebarErrorView.Create(actionRes.Error);
+					}
 
-					//return control;
+					return SidebarView.Create(this, Settings, PlayniteApi, historicalLows);
 				},
 				Closed = () =>
 				{
@@ -88,7 +106,7 @@ namespace Calculator
 			};
 		}
 
-		private async Task<IDictionary<Game, HistoricalLowOutput>> GetHistoricalLow(ICollection<Game> games)
+		public async Task<IDictionary<Game, HistoricalLowOutput>> GetHistoricalLow(ICollection<Game> games)
 		{
 			var DEFAULT_SHOP = ItadShop.Steam;
 			var names = games.Select(g => g.Name).ToArray();
@@ -153,7 +171,84 @@ namespace Calculator
 				res[game] = pair.Value;
 			}
 
+			CacheHistoricalLowToDisk(res);
+
 			return res;
 		}
+
+		private void CacheHistoricalLowToDisk(IDictionary<Game, HistoricalLowOutput> historicalLows)
+		{
+			var dict = new Dictionary<Guid, HistoricalLowOutput>(historicalLows.Count);
+			foreach (var pair in historicalLows)
+			{
+				dict[pair.Key.Id] = pair.Value;
+			}
+
+			// lock is exception safe: Released even when exception is thrown.
+			lock (cacheLock)
+			{
+				using (FileStream fs = new FileStream(cachePath, FileMode.Create))
+				{
+					Serialization.ToJsonStream(dict, fs);
+				}
+			}
+		}
+
+		private IDictionary<Game, HistoricalLowOutput> GetHistoricalLowFromDisk()
+		{
+			Dictionary<Guid, HistoricalLowOutput> cache;
+
+			lock (cacheLock)
+			{
+				cache = Serialization.FromJsonFile<Dictionary<Guid, HistoricalLowOutput>>(cachePath);
+			}
+
+			var historicalLows = new Dictionary<Game, HistoricalLowOutput>();
+
+			foreach (var pair in cache)
+			{
+				var game = PlayniteApi.Database.Games[pair.Key];
+				if (game is null)
+				{
+					continue;
+				}
+
+				historicalLows[game] = pair.Value;
+			}
+
+			return historicalLows;
+		}
+	}
+
+	internal class LibraryTracker
+	{
+		private List<Game> addedGames = new List<Game>();
+		public bool FoundNewGames => addedGames.Count > 0;
+
+		public LibraryTracker(IPlayniteAPI api)
+		{
+			api.Database.Games.ItemCollectionChanged += (s, e) =>
+			{
+				foreach (var game in e.RemovedItems)
+				{
+					addedGames.Remove(game);
+				}
+
+				foreach (var game in e.AddedItems)
+				{
+					addedGames.Add(game);
+				}
+			};
+		}
+
+		public void Reset()
+		{
+			addedGames = new List<Game>();
+		}
+	}
+
+	public interface ICalculator
+	{
+		Task<IDictionary<Game, HistoricalLowOutput>> GetHistoricalLow(ICollection<Game> games);
 	}
 }

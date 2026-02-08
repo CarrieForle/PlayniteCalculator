@@ -2,7 +2,6 @@
 					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
 					xmlns:sys="clr-namespace:System;assembly=mscorlib">
 	<sys:String x:Key="LOCCalculator">Calculator</sys:String>
-	<sys:String x:Key="LOCCalculatorGeneralTab">General</sys:String>
 	<sys:String x:Key="LOCCalculatorMoneyFormatLabel">Money Format:</sys:String>
 	<sys:String x:Key="LOCCalculatorResetFormat">Reset</sys:String>
 	<sys:String x:Key="LOCCalculatorPreviewFormatLabel">Preview:</sys:String>
@@ -12,6 +11,7 @@
 	<sys:String x:Key="LOCCalculatorCountryToolTip">Use the format of ISO 3166-1 Alpha-2</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryTableLinkText">Country Table</sys:String>
 	<sys:String x:Key="LOCCalculatorPlaytimeLabel">Playtime display:</sys:String>
-	<sys:String x:Key="LOCCalculatorColorTab">Color</sys:String>
-	<sys:String x:Key="LOCCalculatorSidebarGamesPlayed">{0} out of {1} played</sys:String>
+	<sys:String x:Key="LOCCalculatorAutomaticUpdateLabel">Automatically recalculate statistic:</sys:String>
+	<sys:String x:Key="LOCCalculatorItadRequestDialog">Helping you get disappointed in your life...</sys:String>
+	<sys:String x:Key="LOCCalculatorSidebarGamesPlayed">{0} out of {1} games played</sys:String>
 </ResourceDictionary>

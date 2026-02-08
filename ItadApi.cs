@@ -191,7 +191,7 @@ namespace Calculator
 		}
 	}
 
-	public class HistoricalLowOutput
+	public struct HistoricalLowOutput
 	{
 		/// <summary>
 		/// Historical price

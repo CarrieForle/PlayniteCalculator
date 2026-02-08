@@ -13,7 +13,7 @@ namespace CommonPluginsShared.Controls
 	{
 		private TextBlock PART_TextBlockTitle { get; set; }
 		private Grid PART_GridContener { get; set; }
-
+		private StackPanel header { get; }
 
 		public SidebarItemControl()
 		{
@@ -39,20 +39,20 @@ namespace CommonPluginsShared.Controls
 			{
 				Style = ResourceProvider.GetResource("BaseTextBlockStyle") as Style,
 				VerticalAlignment = VerticalAlignment.Center,
-				Margin = new Thickness(10, 0, 0, 0),
+				Margin = new Thickness(10, 0, 50, 0),
 				FontSize = 18
 			};
 
 			// Link contener
-			StackPanel stackPanel = new StackPanel
+			header = new StackPanel
 			{
 				Orientation = Orientation.Horizontal,
 				Margin = new Thickness(10, 10, 0, 0)
 			};
-			DockPanel.SetDock(stackPanel, Dock.Top);
+			DockPanel.SetDock(header, Dock.Top);
 
-			stackPanel.Children.Add(textBlockLink);
-			stackPanel.Children.Add(PART_TextBlockTitle);
+			header.Children.Add(textBlockLink);
+			header.Children.Add(PART_TextBlockTitle);
 
 
 			// Content Grid
@@ -70,7 +70,7 @@ namespace CommonPluginsShared.Controls
 
 			// Control
 			DockPanel dockPanel = new DockPanel();
-			_ = dockPanel.Children.Add(stackPanel);
+			_ = dockPanel.Children.Add(header);
 			_ = dockPanel.Children.Add(scrollViewer);
 
 			this.Content = dockPanel;
@@ -80,6 +80,12 @@ namespace CommonPluginsShared.Controls
 		public void SetTitle(string Title)
 		{
 			PART_TextBlockTitle.Text = Title;
+		}
+
+		public void AddHeader(FrameworkElement content)
+		{
+			content.Margin = new Thickness(5, 0, 0, 0);
+			_ = header.Children.Add(content);
 		}
 
 		public void AddContent(FrameworkElement content)

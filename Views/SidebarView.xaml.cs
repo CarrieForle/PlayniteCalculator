@@ -1,70 +1,97 @@
+using CommonPluginsShared.Controls;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Markup;
+using System.Windows.Navigation;
 using static Calculator.PlaytimeHelper;
 
 namespace Calculator
 {
 	public partial class SidebarView : UserControl
 	{
-		private Game[] playedGames;
-		private ICollection<Game> Games => PlayniteApi.Database.Games;
+		private readonly ICalculator plugin;
+		private readonly Game[] playedGames;
+		public ICollection<Game> Games { get; }
+		public ICollection<GameView> GameViews { get; }
 		public CalculatorSettings Settings { get; }
-		public IDictionary<Game, HistoricalLowOutput> HistoricalLows { get; }
 		public IPlayniteAPI PlayniteApi { get; }
+		public IDictionary<Game, HistoricalLowOutput> HistoricalLows { get; }
 
-		private double totalSpentIfRegularPrice;
-		public double TotalSpentIfRegularPrice => totalSpentIfRegularPrice;
-
-		private double totalSpentIfDiscountedPrice;
-		public double TotalSpentIfDiscountedPrice => totalSpentIfDiscountedPrice;
-
-		private double averagePrice;
-		public double AveragePrice => averagePrice;
-
-		private double pricePerHour;
-		public double PricePerHour => pricePerHour;
-
-		private ulong totalPlaytime;
-		public ulong TotalPlaytime => totalPlaytime;
+		public double TotalSpentIfRegularPrice { get; private set; }
+		public double TotalSpentIfDiscountedPrice { get; private set; }
+		public double AveragePrice { get; private set; }
+		public double PricePerHour { get; private set; }
+		public ulong TotalPlaytime { get; private set; }
 
 		public string GamesPlayedInfo => Localized("LOCCalculatorSidebarGamesPlayed", playedGames.Count(), Games.Count);
 		public double PlayedGamesRatio => (double)playedGames.Count() / Games.Count;
 
-		public SidebarView(CalculatorSettings settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
+		private SidebarView(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
 		{
+			this.plugin = plugin;
 			Settings = settings;
 			PlayniteApi = api;
 			HistoricalLows = historicalLows;
+			Games = historicalLows.Keys;
+			GameViews = historicalLows.Select(pair =>
+			{
+				Game game = pair.Key;
+				double price = pair.Value.price;
 
-			//playedGames = PlayniteApi.Database.Games.Where(g => g.Playtime >= 1).ToArray();
-			//totalSpentIfRegularPrice = HistoricalLows.Sum(pair => pair.Value.price);
-			//totalSpentIfDiscountedPrice = HistoricalLows.Sum(pair => pair.Value.lowPrice);
-			//averagePrice = HistoricalLows.Average(pair => pair.Value.price);
-			//totalPlaytime = PlayniteApi.Database.Games.Aggregate(
-			//	0UL,
-			//	(a, g) => a + g.Playtime
-			//);
-			//pricePerHour = totalSpentIfRegularPrice / (totalPlaytime / 3600.0);
+				return new GameView(game, price);
+			}).ToArray();
 
 			playedGames = PlayniteApi.Database.Games.Where(g => g.Playtime >= 1).ToArray();
-			totalSpentIfRegularPrice = 4238.32;
-			totalSpentIfDiscountedPrice = 372.32;
-			averagePrice = 5.32;
-			totalPlaytime = 689420;
-			pricePerHour = 6.32;
 
-			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayMode, Settings.PlaytimePaddingZero);
+			Calculate(historicalLows);
+
+			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayFormat, Settings.PlaytimePaddingZero);
 			Resources.Add("PlaytimeConverter", playtimeConverter);
 
 			DataContext = this;
 			InitializeComponent();
+		}
+
+		internal void Calculate(IDictionary<Game, HistoricalLowOutput> historicalLows)
+		{
+			TotalSpentIfRegularPrice = HistoricalLows.Sum(pair => pair.Value.price);
+			TotalSpentIfDiscountedPrice = HistoricalLows.Sum(pair => pair.Value.lowPrice);
+			AveragePrice = HistoricalLows.Average(pair => pair.Value.price);
+			TotalPlaytime = PlayniteApi.Database.Games.Aggregate(
+				0UL,
+				(a, g) => a + g.Playtime
+			);
+			PricePerHour = TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
+		}
+
+		public static UserControl Create(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, IDictionary<Game, HistoricalLowOutput> historicalLows)
+		{
+			var instance = new SidebarView(plugin, settings, api, historicalLows);
+			var control = new SidebarItemControl();
+			control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
+			control.AddContent(instance);
+			Button refreshBtn = new Button
+			{
+				Content = "Refresh",
+				Command = new RelayCommand(() =>
+				{
+					api.Dialogs.ActivateGlobalProgress(async (args) =>
+					{
+						instance.Calculate(await plugin.GetHistoricalLow(api.Database.Games));
+					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
+				})
+			};
+
+			control.AddHeader(refreshBtn);
+
+			return control;
 		}
 
 		private static string Localized(string key, params object[] param)
@@ -92,10 +119,10 @@ namespace Calculator
 	[ValueConversion(typeof(ulong), typeof(string))]
 	public class PlaytimeConverter : IValueConverter
 	{
-		private readonly PlaytimeDisplayMode mode;
+		private readonly PlaytimeDisplayFormat mode;
 		private readonly bool paddingZero = false;
 
-		public PlaytimeConverter(PlaytimeDisplayMode mode, bool paddingZero)
+		public PlaytimeConverter(PlaytimeDisplayFormat mode, bool paddingZero)
 		{
 			this.mode = mode;
 			this.paddingZero = paddingZero;
@@ -135,5 +162,22 @@ namespace Calculator
 
 			return multiBinding.ProvideValue(serviceProvider);
 		}
+	}
+
+	public class GameView
+	{
+		private Game game;
+		private double price;
+
+		public GameView(Game game, double price)
+		{
+			this.game = game;
+			this.price = price;
+		}
+
+		public string Name => game.Name;
+		public string Icon => game.Icon;
+		public ulong Playtime => game.Playtime;
+		public double Price => price;
 	}
 }

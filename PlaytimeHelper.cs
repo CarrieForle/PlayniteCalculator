@@ -2,7 +2,7 @@ namespace Calculator
 {
 	public class PlaytimeHelper
 	{
-		public enum PlaytimeDisplayMode
+		public enum PlaytimeDisplayFormat
 		{
 			Second,
 			Minute,
@@ -16,7 +16,7 @@ namespace Calculator
 			DayHourMinuteSecond,
 		}
 
-		public static string PlaytimeToString(PlaytimeDisplayMode mode, bool paddingZero, ulong seconds)
+		public static string PlaytimeToString(PlaytimeDisplayFormat mode, bool paddingZero, ulong seconds)
 		{
 			ulong minutes = seconds / 60;
 			ulong hours = seconds / 3600;
@@ -24,32 +24,32 @@ namespace Calculator
 
 			switch (mode)
 			{
-				case PlaytimeDisplayMode.Second:
+				case PlaytimeDisplayFormat.Second:
 					return $"{seconds}s";
-				case PlaytimeDisplayMode.Minute:
+				case PlaytimeDisplayFormat.Minute:
 					return $"{minutes}m";
-				case PlaytimeDisplayMode.MinuteSecond:
+				case PlaytimeDisplayFormat.MinuteSecond:
 					seconds %= 60;
 					return paddingZero ? $"{minutes}m {seconds}s" : $"{minutes}m {seconds:D2}s";
-				case PlaytimeDisplayMode.Hour:
+				case PlaytimeDisplayFormat.Hour:
 					return $"{hours}h";
-				case PlaytimeDisplayMode.HourMinute:
+				case PlaytimeDisplayFormat.HourMinute:
 					minutes %= 60;
 					return paddingZero ? $"{hours}h {minutes}m" : $"{hours}h {minutes:D2}m";
-				case PlaytimeDisplayMode.HourMinuteSecond:
+				case PlaytimeDisplayFormat.HourMinuteSecond:
 					minutes %= 60;
 					seconds %= 60;
 					return paddingZero ? $"{hours}h {minutes}m {seconds}s" : $"{hours}h {minutes:D2}m {seconds:D2}s";
-				case PlaytimeDisplayMode.Day:
+				case PlaytimeDisplayFormat.Day:
 					return $"{days}d";
-				case PlaytimeDisplayMode.DayHour:
+				case PlaytimeDisplayFormat.DayHour:
 					hours %= 24;
 					return paddingZero ? $"{days}d {hours}h" : $"{days}d {hours:D2}h";
-				case PlaytimeDisplayMode.DayHourMinute:
+				case PlaytimeDisplayFormat.DayHourMinute:
 					hours %= 24;
 					minutes %= 60;
 					return paddingZero ? $"{days}d {hours}h {minutes}m" : $"{days}d {hours:D2}h {minutes:D2}m";
-				case PlaytimeDisplayMode.DayHourMinuteSecond:
+				case PlaytimeDisplayFormat.DayHourMinuteSecond:
 				default:
 					hours %= 24;
 					minutes %= 60;

@@ -1,13 +1,13 @@
 using Playnite.SDK;
 using Playnite.SDK.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Windows.Media;
 
 namespace Calculator
 {
-	using static PlaytimeHelper;
 	using static CalculatorSettings;
+	using static PlaytimeHelper;
 
 	public class CalculatorSettings : ObservableObject
 	{
@@ -15,27 +15,14 @@ namespace Calculator
 		public const string DEFAULT_COUNTRY = "US";
 		private string moneyFormat = DEFAULT_MONEY_FORMAT;
 		private string country = DEFAULT_COUNTRY;
-		private PlaytimeDisplayMode mode = PlaytimeDisplayMode.HourMinute;
+		private PlaytimeDisplayFormat playtimeFormat = PlaytimeDisplayFormat.HourMinute;
 		private bool paddingZero = true;
-		private Brush discountedPriceBrush = new SolidColorBrush(Color.FromRgb(0, 255, 0));
-		private Brush regularPriceBrush = new SolidColorBrush(Color.FromRgb(0xff, 0x7b, 0x5a));
+		private AutomaticUpdate automaticUpdate = AutomaticUpdate.OnEnteringView;
 
 		public string MoneyFormat
 		{
 			get => moneyFormat;
 			set => SetValue(ref moneyFormat, value);
-		}
-
-		public PlaytimeDisplayMode PlaytimeDisplayMode
-		{
-			get => mode;
-			set => SetValue(ref mode, value);
-		}
-
-		public bool PlaytimePaddingZero
-		{
-			get => paddingZero;
-			set => SetValue(ref paddingZero, value);
 		}
 
 		public string Country
@@ -58,16 +45,22 @@ namespace Calculator
 			}
 		}
 
-		public Brush RegularPriceBrush
+		public PlaytimeDisplayFormat PlaytimeDisplayFormat
 		{
-			get => regularPriceBrush;
-			set => SetValue(ref regularPriceBrush, value);
+			get => playtimeFormat;
+			set => SetValue(ref playtimeFormat, value);
 		}
 
-		public Brush DiscountedPriceBrush
+		public bool PlaytimePaddingZero
 		{
-			get => discountedPriceBrush;
-			set => SetValue(ref discountedPriceBrush, value);
+			get => paddingZero;
+			set => SetValue(ref paddingZero, value);
+		}
+
+		public AutomaticUpdate AutomaticUpdate
+		{
+			get => automaticUpdate;
+			set => SetValue(ref automaticUpdate, value);
 		}
 	}
 
@@ -159,6 +152,9 @@ namespace Calculator
 			}
 		}
 
+		public IEnumerable<PlaytimeDisplayFormat> PlaytimeValues { get; } = (PlaytimeDisplayFormat[])Enum.GetValues(typeof(PlaytimeDisplayFormat));
+		public IEnumerable<AutomaticUpdate> AutomaticUpdateValues { get; } = (AutomaticUpdate[])Enum.GetValues(typeof(AutomaticUpdate));
+
 		// Need this in order to place MoneyFormatted here.
 		private void ReactOnSettingsChanged(object sender, PropertyChangedEventArgs eventArgs)
 		{
@@ -169,5 +165,12 @@ namespace Calculator
 					break;
 			}
 		}
+	}
+
+	public enum AutomaticUpdate
+	{
+		Never,
+		OnEnteringView,
+		OnLibraryUpdate,
 	}
 }

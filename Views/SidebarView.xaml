@@ -22,20 +22,23 @@
 			<Setter Property="Margin" Value="30"/>
 		</Style>
 	</UserControl.Resources>
-	<StackPanel MaxWidth="1000" Margin="0,100,0,0">
-		<TextBlock Text="Account Value" FontSize="28" HorizontalAlignment="Center"/>
+	<StackPanel MaxWidth="1000" Margin="0,30,0,0">
+		<TextBlock Text="Account Value" FontSize="64" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,80,0,0"/>
 		<WrapPanel HorizontalAlignment="Center"  Orientation="Horizontal" >
 			<StackPanel Margin="30,0">
-				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" Foreground="{Binding Settings.DicountedPriceBrush}" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" d:Text="$399" FontSize="48" FontWeight="Bold" Foreground="#00FF00"/>
 				<TextBlock Text="Lowest prices" Foreground="#888888" HorizontalAlignment="Center" />
 			</StackPanel>
 			<StackPanel Margin="30,0">
-				<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" Foreground="{Binding Settings.RegularPriceBrush}" FontSize="48" FontWeight="Bold"/>
+				<TextBlock Text="{local:MoneyBinding TotalSpentIfRegularPrice}" d:Text="$4,999" Foreground="#ff7b5a" FontSize="48" FontWeight="Bold"/>
 				<TextBlock Text="Today's prices" Foreground="#888888" HorizontalAlignment="Center" />
 			</StackPanel>
 		</WrapPanel>
 		<StackPanel Margin="100,0">
-			<TextBlock Text="{Binding GamesPlayedInfo, Mode=OneTime}" />
+			<DockPanel>
+				<TextBlock Text="{Binding GamesPlayedInfo, Mode=OneTime}" d:Text="{}30 out of 120 games played" DockPanel.Dock="Left" TextAlignment="Left" />
+				<TextBlock Text="{Binding PlayedGamesRatio, Mode=OneTime, StringFormat={}{0:P1}}" d:Text="25%"  DockPanel.Dock="Right" TextAlignment="Right" />
+			</DockPanel>
 			<ProgressBar Height="10" Value="{Binding PlayedGamesRatio, Mode=OneTime}" Maximum="1">
 				<ProgressBar.Resources>
 					<Style TargetType="{x:Type Border}">
@@ -54,9 +57,21 @@
 				<TextBlock Text="{local:MoneyBinding PricePerHour}" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 			<StackPanel Style="{StaticResource Card}">
-				<TextBlock Text="Total Playtime" Style="{StaticResource LabelStyle}"/>
+				<TextBlock Text="Total playtime" Style="{StaticResource LabelStyle}"/>
 				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}, Mode=OneTime}" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 		</WrapPanel>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition />
+				<ColumnDefinition />
+			</Grid.ColumnDefinitions>
+			<StackPanel>
+				<DataGrid>
+				</DataGrid>
+			</StackPanel>
+			<StackPanel>
+			</StackPanel>
+		</Grid>
 	</StackPanel>
 </UserControl>
