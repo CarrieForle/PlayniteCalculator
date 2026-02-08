@@ -67,7 +67,6 @@ namespace CommonPluginsShared.Controls
 
 			scrollViewer.Content = PART_GridContener;
 
-
 			// Control
 			DockPanel dockPanel = new DockPanel();
 			_ = dockPanel.Children.Add(header);
@@ -82,10 +81,11 @@ namespace CommonPluginsShared.Controls
 			PART_TextBlockTitle.Text = Title;
 		}
 
-		public void AddHeader(FrameworkElement content)
+		public void AddHeader(Button btn)
 		{
-			content.Margin = new Thickness(5, 0, 0, 0);
-			_ = header.Children.Add(content);
+			btn.Padding = new Thickness(btn.Padding.Left, 0, btn.Padding.Right, 0);
+			btn.Margin = new Thickness(5, 0, 0, 0);
+			_ = header.Children.Add(btn);
 		}
 
 		public void AddContent(FrameworkElement content)

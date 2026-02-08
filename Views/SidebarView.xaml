@@ -22,8 +22,8 @@
 			<Setter Property="Margin" Value="30"/>
 		</Style>
 	</UserControl.Resources>
-	<StackPanel MaxWidth="1000" Margin="0,30,0,0">
-		<TextBlock Text="Account Value" FontSize="64" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,80,0,0"/>
+	<StackPanel MaxWidth="1000">
+		<TextBlock Text="Account Value" FontSize="64" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,50,0,40"/>
 		<WrapPanel HorizontalAlignment="Center"  Orientation="Horizontal" >
 			<StackPanel Margin="30,0">
 				<TextBlock Text="{local:MoneyBinding TotalSpentIfDiscountedPrice}" d:Text="$399" FontSize="48" FontWeight="Bold" Foreground="#00FF00"/>
@@ -35,7 +35,7 @@
 			</StackPanel>
 		</WrapPanel>
 		<StackPanel Margin="100,0">
-			<DockPanel>
+			<DockPanel Margin="0,20,0,0">
 				<TextBlock Text="{Binding GamesPlayedInfo, Mode=OneTime}" d:Text="{}30 out of 120 games played" DockPanel.Dock="Left" TextAlignment="Left" />
 				<TextBlock Text="{Binding PlayedGamesRatio, Mode=OneTime, StringFormat={}{0:P1}}" d:Text="25%"  DockPanel.Dock="Right" TextAlignment="Right" />
 			</DockPanel>
@@ -50,15 +50,15 @@
 		<WrapPanel HorizontalAlignment="Center">
 			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Average price" Style="{StaticResource LabelStyle}"/>
-				<TextBlock Text="{local:MoneyBinding AveragePrice}" Style="{StaticResource ValueStyle}"/>
+				<TextBlock Text="{local:MoneyBinding AveragePrice}" d:Text="$5.2" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Average price per hour" Style="{StaticResource LabelStyle}"/>
-				<TextBlock Text="{local:MoneyBinding PricePerHour}" Style="{StaticResource ValueStyle}"/>
+				<TextBlock Text="{local:MoneyBinding PricePerHour}" d:Text="$0.32" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Total playtime" Style="{StaticResource LabelStyle}"/>
-				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}, Mode=OneTime}" Style="{StaticResource ValueStyle}"/>
+				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}, Mode=OneTime}" d:Text="4000 h" Style="{StaticResource ValueStyle}"/>
 			</StackPanel>
 		</WrapPanel>
 		<Grid>

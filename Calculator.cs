@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Calculator
 {
@@ -20,6 +21,12 @@ namespace Calculator
 		private readonly CalculatorSettingsViewModel settingsVm;
 		private string cachePath;
 		private object cacheLock = new object();
+		private TextBlock icon = new TextBlock
+		{
+			Text = "\ue9d8",
+			FontFamily = (FontFamily)ResourceProvider.GetResource("FontIcoFont"),
+			FontSize = 20,
+		};
 
 		private CalculatorSettings Settings
 		{
@@ -100,7 +107,7 @@ namespace Calculator
 				{
 					// TODO
 				},
-				Icon = "Assets/sidebar-icon.png",
+				Icon = icon,
 				Type = SiderbarItemType.View,
 				Visible = true,
 			};
