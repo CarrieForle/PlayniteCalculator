@@ -15,8 +15,9 @@ namespace Calculator
 		public const string DEFAULT_COUNTRY = "US";
 		private string moneyFormat = DEFAULT_MONEY_FORMAT;
 		private string country = DEFAULT_COUNTRY;
-		private PlaytimeDisplayFormat playtimeFormat = PlaytimeDisplayFormat.HourMinute;
 		private bool paddingZero = true;
+		private bool darkMode = true;
+		private PlaytimeDisplayFormat playtimeFormat = PlaytimeDisplayFormat.HourMinute;
 		private AutomaticUpdate automaticUpdate = AutomaticUpdate.OnEnteringView;
 
 		public string MoneyFormat
@@ -45,16 +46,22 @@ namespace Calculator
 			}
 		}
 
-		public PlaytimeDisplayFormat PlaytimeDisplayFormat
-		{
-			get => playtimeFormat;
-			set => SetValue(ref playtimeFormat, value);
-		}
-
 		public bool PlaytimePaddingZero
 		{
 			get => paddingZero;
 			set => SetValue(ref paddingZero, value);
+		}
+
+		public bool DarkMode
+		{
+			get => darkMode;
+			set => SetValue(ref darkMode, value);
+		}
+
+		public PlaytimeDisplayFormat PlaytimeDisplayFormat
+		{
+			get => playtimeFormat;
+			set => SetValue(ref playtimeFormat, value);
 		}
 
 		public AutomaticUpdate AutomaticUpdate

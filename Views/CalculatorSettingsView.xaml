@@ -52,7 +52,7 @@
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
-			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted}" />
+			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted, Mode=OneWay}" />
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
@@ -65,11 +65,14 @@
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
-			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayFormat}" ItemsSource="{Binding PlaytimeValues}" MinWidth="100" />
+			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayFormat}" ItemsSource="{Binding PlaytimeValues, Mode=OneTime}" MinWidth="100" />
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorAutomaticUpdateLabel}" Target="{Binding ElementName=AutomaticUpdate}" />
-			<ComboBox Name="AutomaticUpdate" SelectedItem="{Binding Settings.AutomaticUpdate}" ItemsSource="{Binding AutomaticUpdateValues}" MinWidth="100" />
+			<ComboBox Name="AutomaticUpdate" SelectedItem="{Binding Settings.AutomaticUpdate}" ItemsSource="{Binding AutomaticUpdateValues, Mode=OneTime}" MinWidth="100" />
+		</StackPanel>
+		<StackPanel Orientation="Horizontal">
+			<CheckBox IsChecked="{Binding Settings.DarkMode}" Content="{DynamicResource LOCCalculatorDarkModeCheckbox}" ToolTip="{DynamicResource LOCCalculatorDarkModeCheckboxToolTip}" ToolTipService.InitialShowDelay="0" />
 		</StackPanel>
 	</StackPanel>
 </UserControl>

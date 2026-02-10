@@ -3,13 +3,12 @@ using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Calculator
 {
-	public class ItadApi
+	public static class ItadApi
 	{
 		// Put your own ITAD app.
 		internal const string API_KEY = "8446f2b9d09ff21e4336a40c48f024e2bbcdae92";
@@ -20,17 +19,12 @@ namespace Calculator
 			Timeout = TimeSpan.FromSeconds(10)
 		};
 
-		public ItadApi()
-		{
-
-		}
-
 		/// <summary>
 		/// Look up ITAD game IDs by their names
 		/// </summary>
 		/// <param name="gameNames">An array of game names</param>
 		/// <returns>A dictionary of game names and their ITAD game IDs</returns>
-		public async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
+		public static async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
 		{
 			var response = await Client.PostAsync($"https://api.isthereanydeal.com/lookup/id/title/v1?key={API_KEY}", JsonContentOf(gameNames));
 			await ThrowOnBadHttpStatus(response);
@@ -44,7 +38,7 @@ namespace Calculator
 		/// </summary>
 		/// <param name="input">A list of ITAD game ID categorized by their lookup shop</param>
 		/// <returns>A dictionary of games' ITAD IDs and their price info</returns>
-		public async Task<IDictionary<HistoricalLowKey, HistoricalLowOutput>> HistoricalLow(IDictionary<ItadShop, ICollection<string>> input, string country)
+		public static async Task<IDictionary<HistoricalLowKey, HistoricalLowOutput>> HistoricalLow(IDictionary<ItadShop, ICollection<string>> input, string country)
 		{
 			// ITAD accepts at most 200 games per request.
 			var historicalLowInputs = new Dictionary<ItadShop, List<List<string>>>();
@@ -168,7 +162,6 @@ namespace Calculator
 			{
 				public double amount;
 			}
-
 		}
 	}
 
