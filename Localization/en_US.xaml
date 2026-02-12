@@ -17,6 +17,12 @@
 	<sys:String x:Key="LOCCalculatorDarkModeCheckboxToolTip" xml:space="preserve">This only changes text color and does not change the background.
 To change the background, please use an appropriate theme or use ThemeModifier.</sys:String>
 	<sys:String x:Key="LOCCalculatorItadRequestDialog">Helping you get disappointed in your life...</sys:String>
+	<sys:String x:Key="LOCCalculatorUnknownError">An unknown error occurred while calculating your account worth.</sys:String>
+	<sys:String x:Key="LOCCalculatorError">An error occurred while calculating your account worth:</sys:String>
+	<sys:String x:Key="LOCCalculatorNoGame">Your library is empty. Add some games and come back again.</sys:String>
+	<sys:String x:Key="LOCCalculatorSidebarUnknown">Unknown</sys:String>
+	<sys:String x:Key="LOCCalculatorSidebarRefresh">Refresh</sys:String>
+	<sys:String x:Key="LOCCalculatorSidebarLastUpdated">Last updated: {0}</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarGamesPlayed">{0} out of {1} games played</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarHighestPlaytimeLevel">{0} or more hours</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarPlaytimeLevel">{0} to {1} hours</sys:String>

@@ -81,11 +81,16 @@ namespace CommonPluginsShared.Controls
 			PART_TextBlockTitle.Text = Title;
 		}
 
+		public void AddHeader(FrameworkElement elem)
+		{
+			elem.Margin = new Thickness(5, 0, 0, 0);
+			header.Children.Add(elem);
+		}
+
 		public void AddHeader(Button btn)
 		{
 			btn.Padding = new Thickness(btn.Padding.Left, 0, btn.Padding.Right, 0);
-			btn.Margin = new Thickness(5, 0, 0, 0);
-			_ = header.Children.Add(btn);
+			AddHeader((FrameworkElement)btn);
 		}
 
 		public void AddContent(FrameworkElement content)

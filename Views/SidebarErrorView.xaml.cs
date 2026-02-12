@@ -1,8 +1,6 @@
 using CommonPluginsShared.Controls;
 using Playnite.SDK;
-using Playnite.SDK.Models;
 using System;
-using System.Collections.Generic;
 using System.Windows.Controls;
 
 namespace Calculator
@@ -13,8 +11,8 @@ namespace Calculator
 
 		public SidebarErrorView(Exception exception)
 		{
-			DataContext = this;
 			Error = exception;
+			DataContext = this;
 			InitializeComponent();
 		}
 

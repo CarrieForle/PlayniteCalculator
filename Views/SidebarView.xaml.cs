@@ -1,9 +1,9 @@
 using CommonPluginsShared.Controls;
-using Microsoft.SqlServer.Server;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Windows;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -23,9 +23,9 @@ namespace Calculator
 		public IPlayniteAPI PlayniteApi { get; }
 		public SidebarViewObject Model { get; set; }
 
-		public double TotalSpentIfRegularPrice => Model.HistoricalLows.Sum(pair => pair.Value.price);
-		public double TotalSpentIfDiscountedPrice => Model.HistoricalLows.Sum(pair => pair.Value.lowPrice);
-		public double AveragePrice => Model.HistoricalLows.Average(pair => pair.Value.price);
+		public double TotalSpentIfRegularPrice => Model.Prices.Sum(pair => pair.Value.price);
+		public double TotalSpentIfDiscountedPrice => Model.Prices.Sum(pair => pair.Value.lowPrice);
+		public double AveragePrice => Model.Prices.Average(pair => pair.Value.price);
 		public double PricePerHour => TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
 		public ulong TotalPlaytime => PlayniteApi.Database.Games.Aggregate(
 			0UL,
@@ -34,8 +34,8 @@ namespace Calculator
 		public double PlayedGamesRatio => (double)PlayedGames.Count() / Games.Count;
 
 		public Game[] PlayedGames => Games.Where(g => g.Playtime >= 1).ToArray();
-		public ICollection<Game> Games => Model.HistoricalLows.Keys;
-		public ICollection<GameView> GameViews => Model.HistoricalLows.Select(pair =>
+		public ICollection<Game> Games => Model.Prices.Keys;
+		public ICollection<GameView> GameViews => Model.Prices.Select(pair =>
 		{
 			Game game = pair.Key;
 			double price = pair.Value.price;
@@ -103,6 +103,11 @@ namespace Calculator
 					ResourceProvider.GetString("LOCCalculatorSidebarLowestCostLevel"),
 					price => price.Sum++
 				);
+				res.Add(new CostGroup
+				{
+					Group = ResourceProvider.GetString("LOCCalculatorSidebarUnknown"),
+					Sum = Model.UnknownGameCount,
+				});
 
 				int acc = 0;
 				foreach (var r in res)
@@ -169,17 +174,32 @@ namespace Calculator
 			control.AddContent(instance);
 			Button refreshBtn = new Button
 			{
-				Content = "Refresh",
+				Content = ResourceProvider.GetString("LOCCalculatorSidebarRefresh"),
 				Command = new RelayCommand(() =>
 				{
-					api.Dialogs.ActivateGlobalProgress(async (args) =>
+					var res = api.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
-						instance.Model = await plugin.GetHistoricalLow(api.Database.Games);
+						instance.Model = await plugin.GetPrice(api.Database.Games);
 					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
+
+					if (!(res.Error is null))
+					{
+						instance.PlayniteApi.Dialogs.ShowErrorMessage($"{ResourceProvider.GetString("LOCCalculatorError")}\n\n{res.Error.Message}", ResourceProvider.GetString("LOCCalculator"));
+					}
+					else if (!(res.Result ?? false))
+					{
+						instance.PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCCalculatorUnknownError"), ResourceProvider.GetString("LOCCalculator"));
+					}
 				})
 			};
 
 			control.AddHeader(refreshBtn);
+			control.AddHeader(new TextBlock
+			{
+				Text = Localized("LOCCalculatorSidebarLastUpdated", instance.Model.Datetime),
+				VerticalAlignment = VerticalAlignment.Center,
+				Style = ResourceProvider.GetResource("BaseTextBlockStyle") as Style,
+			});
 
 			return control;
 		}
@@ -234,7 +254,7 @@ namespace Calculator
 				NextOuterIteration:;
 			}
 
-			return grouping.Values;
+			return grouping.Values.ToList();
 		}
 	}
 

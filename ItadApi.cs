@@ -2,31 +2,27 @@ using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Calculator
 {
+	using static ApiCommon;
+
 	public static class ItadApi
 	{
 		// Put your own ITAD app.
 		internal const string API_KEY = "8446f2b9d09ff21e4336a40c48f024e2bbcdae92";
-
-		// Use one HttpClient accross every class.
-		internal static readonly HttpClient Client = new HttpClient()
-		{
-			Timeout = TimeSpan.FromSeconds(10)
-		};
 
 		/// <summary>
 		/// Look up ITAD game IDs by their names
 		/// </summary>
 		/// <param name="gameNames">An array of game names</param>
 		/// <returns>A dictionary of game names and their ITAD game IDs</returns>
-		public static async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
+		public static async Task<IDictionary<string, string>> LookUpGameId(HttpClient client, ICollection<string> gameNames)
 		{
-			var response = await Client.PostAsync($"https://api.isthereanydeal.com/lookup/id/title/v1?key={API_KEY}", JsonContentOf(gameNames));
+			var response = await client.PostAsync($"https://api.isthereanydeal.com/lookup/id/title/v1?key={API_KEY}", JsonContentOf(gameNames));
 			await ThrowOnBadHttpStatus(response);
 			var res = Serialization.FromJsonStream<OrdinalIgnoreCaseStringDictionary<string>>(await response.Content.ReadAsStreamAsync());
 
@@ -34,50 +30,49 @@ namespace Calculator
 		}
 
 		/// <summary>
-		/// Get historical low price of the games
+		/// Get price overview of the games
 		/// </summary>
 		/// <param name="input">A list of ITAD game ID categorized by their lookup shop</param>
-		/// <returns>A dictionary of games' ITAD IDs and their price info</returns>
-		public static async Task<IDictionary<HistoricalLowKey, HistoricalLowOutput>> HistoricalLow(IDictionary<ItadShop, ICollection<string>> input, string country)
+		public static async Task<PriceOverview> PriceOverview(HttpClient client, IDictionary<ItadShop, ICollection<string>> input, string country)
 		{
 			// ITAD accepts at most 200 games per request.
-			var historicalLowInputs = new Dictionary<ItadShop, List<List<string>>>();
+			var shopToChunks = new Dictionary<ItadShop, List<List<string>>>();
 
 			foreach (var pair in input)
 			{
 				ItadShop shop = pair.Key;
 				var itadIds = pair.Value;
 				var inputChunk = new List<string>();
-				historicalLowInputs[shop] = new List<List<string>>();
+				shopToChunks[shop] = new List<List<string>>();
 
 				foreach (var id in itadIds)
 				{
 					if (inputChunk.Count == 200)
 					{
-						historicalLowInputs[shop].Add(inputChunk);
+						shopToChunks[shop].Add(inputChunk);
 						inputChunk = new List<string>();
 					}
 
 					inputChunk.Add(id);
 				}
 
-				historicalLowInputs[shop].Add(inputChunk);
+				shopToChunks[shop].Add(inputChunk);
 			}
 
-			var tasks = new List<Task<HistoricalLowOutputDeserialized[]>>();
+			var tasks = new List<Task<PriceOverviewOutput>>();
 
-			foreach (var pair in historicalLowInputs)
+			foreach (var pair in shopToChunks)
 			{
 				ItadShop shop = pair.Key;
 				var itadIdChunks = pair.Value;
 				foreach (var chunk in itadIdChunks)
 				{
-					var task = Client.PostAsync($"https://api.isthereanydeal.com/games/storelow/v2?key={API_KEY}&shops={(int)shop}&country={country}", JsonContentOf(chunk))
+					var task = client.PostAsync($"https://api.isthereanydeal.com/games/overview/v2?key={API_KEY}&shops={(int)shop}&country={country}", JsonContentOf(chunk))
 						.ContinueWith(async (t) =>
 						{
 							var response = t.Result;
 							await ThrowOnBadHttpStatus(response);
-							var resChunk = Serialization.FromJsonStream<HistoricalLowOutputDeserialized[]>(await response.Content.ReadAsStreamAsync());
+							var resChunk = Serialization.FromJsonStream<PriceOverviewOutput>(await response.Content.ReadAsStreamAsync());
 
 							return resChunk;
 						}, TaskContinuationOptions.OnlyOnRanToCompletion)
@@ -87,85 +82,55 @@ namespace Calculator
 				}
 			}
 
-			var historyChunks = await Task.WhenAll(tasks);
-			var res = new Dictionary<HistoricalLowKey, HistoricalLowOutput>();
+			var priceChunks = await IfCancelledThenTimeout(Task.WhenAll(tasks));
+			var res = new Dictionary<PriceKey, Price>();
+			Currency currency = default;
+			bool isCurrencyInitialized = false;
 
-			foreach (var chunk in historyChunks)
+			foreach (var price in priceChunks.SelectMany(c => c.prices))
 			{
-				foreach (var history in chunk)
+				var key = new PriceKey
 				{
-					var key = new HistoricalLowKey
-					{
-						id = history.id,
-						shop = ItadShopExtension.FromInt(history.lows[0].shop.id),
-					};
-					res[key] = new HistoricalLowOutput
-					{
-						lowPrice = history.lows[0].price.amount,
-						price = history.lows[0].regular.amount,
-					};
+					id = price.id,
+					shop = ItadShopExtension.FromInt(price.current.shop.id),
+				};
+
+				double lowPrice = 0;
+				double regular = price.current.price.amount;
+
+				// For free games, lowest will return
+				// the old prices when those games were
+				// still paid.
+				//
+				// If the game was free from day 1, lowest
+				// will be null.
+				if (regular != 0 && !(price.lowest is null))
+				{
+					lowPrice = price.lowest.price.amount;
 				}
+
+				if (!isCurrencyInitialized)
+				{
+					Enum.TryParse(price.current.price.currency, out currency);
+					isCurrencyInitialized = true;
+				}
+
+				res[key] = new Price
+				{
+					lowPrice = lowPrice,
+					price = regular,
+				};
 			}
 
-			return res;
-		}
-
-		internal static async Task<T> TryParse<T>(HttpResponseMessage response, string msg) 
-			where T: class
-		{
-			string content = await response.Content.ReadAsStringAsync();
-
-			if (!Serialization.TryFromJson(content, out T res))
+			return new PriceOverview
 			{
-				throw new CalculatorException($"{msg}: {content}");
-			}
-
-			return res;
-		}
-
-		internal static async Task ThrowOnBadHttpStatus(HttpResponseMessage response)
-		{
-			if (response.IsSuccessStatusCode)
-			{
-				return;
-			}
-
-			string responseContent = await response.Content.ReadAsStringAsync();
-			throw new HttpRequestException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"");
-		}
-
-		private static StringContent JsonContentOf<T>(T data)
-			where T : class
-		{
-			return new StringContent(Serialization.ToJson(data), Encoding.UTF8, "application/json");
+				price = res,
+				currency = currency,
+			};
 		}
 	}
 
-	public class HistoricalLowOutputDeserialized
-	{
-		public string id;
-		public Low[] lows;
-
-		public class Low
-		{
-			public Shop shop;
-
-			public class Shop
-			{
-				public int id;
-			}
-
-			public Price price;
-			public Price regular;
-
-			public class Price
-			{
-				public double amount;
-			}
-		}
-	}
-
-	public class HistoricalLowKey
+	public class PriceKey
 	{
 		/// <summary>
 		/// Game ITAD ID
@@ -184,7 +149,7 @@ namespace Calculator
 		}
 	}
 
-	public struct HistoricalLowOutput
+	public struct Price
 	{
 		/// <summary>
 		/// Historical price
@@ -195,6 +160,46 @@ namespace Calculator
 		/// Regular price
 		/// </summary>
 		public double price;
+	}
+
+	public class PriceOverview
+	{
+		public IDictionary<PriceKey, Price> price;
+		public Currency currency;
+	}
+
+	// prices might be empty (e.g., https://isthereanydeal.com/game/minecraft-bedrock/info/)
+	public class PriceOverviewOutput
+	{
+		public Price[] prices;
+		public class Price
+		{
+			public string id;
+			public Current current;
+			public Lowest lowest;
+			
+			public class Current
+			{
+				public Shop shop;
+				public InnerPrice price;
+			}
+
+			public class Lowest
+			{
+				public InnerPrice price;
+			}
+
+			public class Shop
+			{
+				public int id;
+			}
+
+			public class InnerPrice
+			{
+				public double amount;
+				public string currency;
+			}
+		}
 	}
 
 	// The number is shopId which was gotten from https://api.isthereanydeal.com/service/shops/v1
@@ -266,21 +271,21 @@ namespace Calculator
 		}
 	}
 
-	internal class HistoricalLow: Dictionary<HistoricalLowKey, HistoricalLowOutput>
+	internal class HistoricalLow: Dictionary<PriceKey, Price>
 	{
 		public HistoricalLow() : base(new HistoricalLowComparator())
 		{
 
 		}
 
-		private class HistoricalLowComparator : EqualityComparer<HistoricalLowKey>
+		private class HistoricalLowComparator : EqualityComparer<PriceKey>
 		{
-			public override bool Equals(HistoricalLowKey lhs, HistoricalLowKey rhs)
+			public override bool Equals(PriceKey lhs, PriceKey rhs)
 			{
 				return lhs.id == rhs.id && lhs.shop == rhs.shop;
 			}
 
-			public override int GetHashCode(HistoricalLowKey key)
+			public override int GetHashCode(PriceKey key)
 			{
 				return key.GetHashCode();
 			}

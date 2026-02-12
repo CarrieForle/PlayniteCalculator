@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Calculator
 {
+	using static ApiCommon;
+
 	public static class CurrencyApi
 	{
 		/// <summary>
@@ -11,18 +14,18 @@ namespace Calculator
 		/// </summary>
 		/// <param name="currency">Currency name</param>
 		/// <returns>Exchange rate</returns>
-		public static async Task<double> GetExchangeRate(string currency)
+		public static async Task<double> GetExchangeRate(HttpClient client, string currency)
 		{
 			var currencyString = currency.ToString();
-			var response = await ItadApi.Client.GetAsync($"https://currencyrateapi.com/api/latest?base=USD&codes={currencyString}");
-			await ItadApi.ThrowOnBadHttpStatus(response);
-			var rate = await ItadApi.TryParse<ExchangeRate>(response, "Exchange rate");
+			var response = await IfCancelledThenTimeout(client.GetAsync($"https://currencyrateapi.com/api/latest?base=USD&codes={currencyString}"));
+			await ThrowOnBadHttpStatus(response);
+			var rate = await TryParse<ExchangeRate>(response, "Exchange rate");
 			return rate.rates[currencyString.ToLower()];
 		}
 
-		public static async Task<double> GetExchangeRate(Currency currency)
+		public static async Task<double> GetExchangeRate(HttpClient client, Currency currency)
 		{
-			return await GetExchangeRate(currency.ToString());
+			return await GetExchangeRate(client, currency.ToString());
 		}
 
 		private class ExchangeRate
@@ -33,6 +36,7 @@ namespace Calculator
 
 	public enum Currency
 	{
+		USD,
 		AED,
 		AFN,
 		ALL,
@@ -215,7 +219,6 @@ namespace Calculator
 		TZS,
 		UAH,
 		UGX,
-		USD = 0,
 		UYU,
 		UZS,
 		VEB,

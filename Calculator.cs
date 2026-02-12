@@ -5,8 +5,10 @@ using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -61,7 +63,7 @@ namespace Calculator
 		{
 			if (Settings.AutomaticUpdate == AutomaticUpdate.OnLibraryUpdate && libraryTracker.FoundNewGames)
 			{
-				_ = GetHistoricalLow(PlayniteApi.Database.Games);
+				_ = GetPrice(PlayniteApi.Database.Games);
 				libraryTracker.Reset();
 			}
 		}
@@ -85,15 +87,18 @@ namespace Calculator
 						}
 					}
 
+					if (!games.HasItems())
+					{
+						return SidebarErrorView.Create(new CalculatorException(ResourceProvider.GetString("LOCCalculatorNoGame")));
+					}
+
 					var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
-						sidebarViewObject = await GetHistoricalLow(games);
+						sidebarViewObject = await GetPrice(games);
 					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
 
-					if (
-						sidebarViewObject is null ||
-						!(actionRes.Result ?? false) ||
-						actionRes.Error is Exception
+					if (!(actionRes.Result ?? false) ||
+						!(actionRes.Error is null)
 					)
 					{
 						return SidebarErrorView.Create(actionRes.Error);
@@ -101,48 +106,40 @@ namespace Calculator
 
 					return SidebarView.Create(this, Settings, PlayniteApi, sidebarViewObject);
 				},
-				Closed = () =>
-				{
-					// TODO
-				},
 				Icon = icon,
 				Type = SiderbarItemType.View,
 				Visible = true,
 			};
 		}
 
-		public async Task<SidebarViewObject> GetHistoricalLow(ICollection<Game> games)
+		public async Task<SidebarViewObject> GetPrice(ICollection<Game> games)
 		{
-			var country = Settings.Country;
-			// country and currency are uppercase.
-			var currency = ((Currency[])Enum.GetValues(typeof(Currency))).FirstOrDefault(c => c.ToString().StartsWith(country));
-			Task<double> currencyTask = null;
-
-			if (currency != Currency.USD)
+			Debug.Assert(games.HasItems());
+			using (HttpClient client = new HttpClient())
 			{
-				currencyTask = CurrencyApi.GetExchangeRate(currency);
-			}
+				var DEFAULT_SHOP = ItadShop.Steam;
+				var names = games.Select(g => g.Name).ToArray();
+				var nameToItadIds = await ItadApi.LookUpGameId(client, names);
+				var input = new Dictionary<ItadShop, ICollection<string>>();
+				var itadIdsToGames = new Dictionary<string, List<Game>>();
 
-			var DEFAULT_SHOP = ItadShop.Steam;
-			var names = games.Select(g => g.Name).ToArray();
-			var nameToItadIds = await ItadApi.LookUpGameId(names);
-			var historicalLowInputs = new Dictionary<ItadShop, ICollection<string>>();
-			var itadIdsToGames = new Dictionary<string, List<Game>>();
-
-			foreach (Game game in games)
-			{
-				// Ignore games that does not have ITAD ID.
-				if (nameToItadIds.TryGetValue(game.Name, out string id) && !(id is null))
+				foreach (Game game in games)
 				{
+					// Ignore games that does not have ITAD ID.
+					if (!nameToItadIds.TryGetValue(game.Name, out string id) || id is null)
+					{
+						continue;
+					}
+
 					var shop = ItadShopExtension.FromGameSource(game.Source) ?? DEFAULT_SHOP;
 
-					if (historicalLowInputs.ContainsKey(shop))
+					if (input.ContainsKey(shop))
 					{
-						historicalLowInputs[shop].Add(id);
+						input[shop].Add(id);
 					}
 					else
 					{
-						historicalLowInputs[shop] = new List<string> { id };
+						input[shop] = new List<string> { id };
 					}
 
 					if (itadIdsToGames.ContainsKey(id))
@@ -154,68 +151,85 @@ namespace Calculator
 						itadIdsToGames[id] = new List<Game> { game };
 					}
 				}
-			}
 
-			var historicalLowOutputs = await ItadApi.HistoricalLow(historicalLowInputs, Settings.Country);
-			var historicalLows = new Dictionary<Game, HistoricalLowOutput>();
-
-			foreach (var pair in historicalLowOutputs)
-			{
-				string id = pair.Key.id;
-				ItadShop? shop = pair.Key.shop;
-
-				var gamesFromId = itadIdsToGames[id];
-				Game game;
-
-				if (gamesFromId.Count == 1)
+				var output = await ItadApi.PriceOverview(client, input, Settings.Country);
+				var currency = output.currency;
+				Task<double> currencyTask = null;
+				if (currency != default)
 				{
-					game = gamesFromId[0];
-				}
-				else
-				{
-					game = gamesFromId.FirstOrDefault(g =>
-					{
-						return shop == ItadShopExtension.FromGameSource(g.Source);
-					}) ?? gamesFromId.FirstOrDefault(g =>
-					{
-						return ItadShopExtension.FromGameSource(g.Source) is null;
-					}) ?? gamesFromId[0];
-					gamesFromId.Remove(game);
+					currencyTask = CurrencyApi.GetExchangeRate(client, currency);
 				}
 
-				historicalLows[game] = pair.Value;
+				var prices = new Dictionary<Game, Price>();
+
+				foreach (var pair in output.price)
+				{
+					string id = pair.Key.id;
+					ItadShop? shop = pair.Key.shop;
+					var gamesFromId = itadIdsToGames[id];
+					Game game;
+
+					if (gamesFromId.Count == 1)
+					{
+						game = gamesFromId[0];
+					}
+					// If there are multiple copies, choose the
+					// Game object with the following priority:
+					//
+					// 1. First Game whose source and ITAD shop
+					// matches
+					// 2. First Game who has no source
+					// 3. First Game in the list
+					else
+					{
+						game = gamesFromId.FirstOrDefault(g =>
+						{
+							return shop == ItadShopExtension.FromGameSource(g.Source);
+						}) ?? gamesFromId.FirstOrDefault(g =>
+						{
+							return ItadShopExtension.FromGameSource(g.Source) is null;
+						}) ?? gamesFromId[0];
+						gamesFromId.Remove(game);
+					}
+
+					prices[game] = pair.Value;
+				}
+
+				double exchangeRate = 1;
+
+				if (!(currencyTask is null))
+				{
+					exchangeRate = await currencyTask;
+				}
+
+				var res = new SidebarViewObject
+				{
+					Prices = prices,
+					Currency = currency,
+					ExchangeRate = exchangeRate,
+					Datetime = DateTime.Now,
+					UnknownGameCount = games.Count - prices.Count
+				};
+
+				CacheToDisk(res);
+				return res;
 			}
-
-			double exchangeRate = 1;
-
-			if (!(currencyTask is null))
-			{
-				exchangeRate = await currencyTask;
-			}
-
-			var res = new SidebarViewObject
-			{
-				HistoricalLows = historicalLows,
-				Currency = currency,
-				ExchangeRate = exchangeRate,
-			};
-
-			CacheToDisk(res);
-			return res;
 		}
 
 		private void CacheToDisk(SidebarViewObject obj)
 		{
 			var cache = new SidebarViewObjectCache
 			{
-				HistoricalLows = new Dictionary<Guid, HistoricalLowOutput>(),
+				Prices = new Dictionary<Guid, Price>(),
 				Currency = obj.Currency,
 				ExchangeRate = obj.ExchangeRate,
+				UnknownGameCount = obj.UnknownGameCount,
+				Datetime = obj.Datetime,
 			};
 
-			foreach (var pair in obj.HistoricalLows)
+			foreach (var pair in obj.Prices)
 			{
-				cache.HistoricalLows[pair.Key.Id] = pair.Value;
+				cache.Prices[pair.Key.Id] = pair.Value;
 			}
 
 			// lock is exception safe: Released even when exception is thrown.
@@ -228,6 +242,10 @@ namespace Calculator
 			}
 		}
 
+		/// <summary>
+		/// Get cached <see cref="SidebarViewObject" />
+		/// </summary>
+		/// <returns><see cref="SidebarViewObject" /> if success, otherwise null</returns>
 		private SidebarViewObject FromDisk()
 		{
 			SidebarViewObjectCache cache = null;
@@ -240,19 +258,19 @@ namespace Calculator
 				}
 			}
 
-			if (cache is null || cache.HistoricalLows is null)
+			if (cache is null || cache.Prices is null)
 			{
 				return null;
 			}
 
 			var sidebarViewObject = new SidebarViewObject
 			{
-				HistoricalLows = new Dictionary<Game, HistoricalLowOutput>(),
+				Prices = new Dictionary<Game, Price>(),
 				Currency = cache.Currency,
 				ExchangeRate = cache.ExchangeRate,
 			};
 
-			foreach (var pair in cache.HistoricalLows)
+			foreach (var pair in cache.Prices)
 			{
 				var game = PlayniteApi.Database.Games[pair.Key];
 				if (game is null)
@@ -260,7 +278,7 @@ namespace Calculator
 					continue;
 				}
 
-				sidebarViewObject.HistoricalLows[game] = pair.Value;
+				sidebarViewObject.Prices[game] = pair.Value;
 			}
 
 			return sidebarViewObject;
@@ -269,16 +287,20 @@ namespace Calculator
 
 	public class SidebarViewObject
 	{
-		public Dictionary<Game, HistoricalLowOutput> HistoricalLows { get; set; }
+		public Dictionary<Game, Price> Prices { get; set; }
 		public Currency Currency { get; set; }
-		public double ExchangeRate { get; set; } = 1;
+		public double ExchangeRate { get; set; }
+		public DateTime Datetime { get; set; }
+		public int UnknownGameCount { get; set; }
 	}
 
 	internal class SidebarViewObjectCache
 	{
-		public Dictionary<Guid, HistoricalLowOutput> HistoricalLows { get; set; }
+		public Dictionary<Guid, Price> Prices { get; set; }
 		public Currency Currency { get; set; }
 		public double ExchangeRate { get; set; } = 1;
+		public DateTime Datetime { get; set; }
+		public int UnknownGameCount { get; set; } = 0;
 	}
 
 	internal class LibraryTracker
@@ -310,6 +332,6 @@ namespace Calculator
 
 	public interface ICalculator
 	{
-		Task<SidebarViewObject> GetHistoricalLow(ICollection<Game> games);
+		Task<SidebarViewObject> GetPrice(ICollection<Game> games);
 	}
 }
