@@ -34,7 +34,7 @@ namespace Calculator
 		public double PlayedGamesRatio => (double)PlayedGames.Count() / Games.Count;
 
 		public Game[] PlayedGames => Games.Where(g => g.Playtime >= 1).ToArray();
-		public ICollection<Game> Games => Model.Prices.Keys;
+		public ICollection<Game> Games => Model.Prices.Keys.Union(Model.UnknownGames).ToArray();
 		public ICollection<GameView> GameViews => Model.Prices.Select(pair =>
 		{
 			Game game = pair.Key;
@@ -106,7 +106,7 @@ namespace Calculator
 				res.Add(new CostGroup
 				{
 					Group = ResourceProvider.GetString("LOCCalculatorSidebarUnknown"),
-					Sum = Model.UnknownGameCount,
+					Sum = Model.UnknownGames.Count,
 				});
 
 				int acc = 0;

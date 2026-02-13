@@ -208,7 +208,7 @@ namespace Calculator
 					Currency = currency,
 					ExchangeRate = exchangeRate,
 					Datetime = DateTime.Now,
-					UnknownGameCount = games.Count - prices.Count
+					UnknownGames = games.Except(prices.Keys).ToArray(),
 				};
 
 				CacheToDisk(res);
@@ -223,7 +223,7 @@ namespace Calculator
 				Prices = new Dictionary<Guid, Price>(),
 				Currency = obj.Currency,
 				ExchangeRate = obj.ExchangeRate,
-				UnknownGameCount = obj.UnknownGameCount,
+				UnknownGames = obj.UnknownGames.Select(g => g.Id).ToArray(),
 				Datetime = obj.Datetime,
 			};
 
@@ -248,40 +248,55 @@ namespace Calculator
 		/// <returns><see cref="SidebarViewObject" /> if success, otherwise null</returns>
 		private SidebarViewObject FromDisk()
 		{
-			SidebarViewObjectCache cache = null;
-
-			lock (cacheLock)
+			try
 			{
-				if (!Serialization.TryFromJsonFile(cachePath, out cache))
-				{
-					return null;
-				}
-			}
+				SidebarViewObjectCache cache = null;
 
-			if (cache is null || cache.Prices is null)
+				lock (cacheLock)
+				{
+					if (!Serialization.TryFromJsonFile(cachePath, out cache))
+					{
+						return null;
+					}
+				}
+
+				var sidebarViewObject = new SidebarViewObject
+				{
+					Prices = new Dictionary<Game, Price>(),
+					Currency = cache.Currency,
+					ExchangeRate = cache.ExchangeRate,
+					Datetime = cache.Datetime,
+					UnknownGames = new List<Game>(),
+				};
+
+				foreach (var pair in cache.Prices)
+				{
+					var game = PlayniteApi.Database.Games[pair.Key];
+					if (game is null)
+					{
+						continue;
+					}
+
+					sidebarViewObject.Prices[game] = pair.Value;
+				}
+
+				foreach (var id in cache.UnknownGames)
+				{
+					var game = PlayniteApi.Database.Games[id];
+					if (game is null)
+					{
+						continue;
+					}
+
+					sidebarViewObject.UnknownGames.Add(game);
+				}
+
+				return sidebarViewObject;
+			}
+			catch
 			{
 				return null;
 			}
-
-			var sidebarViewObject = new SidebarViewObject
-			{
-				Prices = new Dictionary<Game, Price>(),
-				Currency = cache.Currency,
-				ExchangeRate = cache.ExchangeRate,
-			};
-
-			foreach (var pair in cache.Prices)
-			{
-				var game = PlayniteApi.Database.Games[pair.Key];
-				if (game is null)
-				{
-					continue;
-				}
-
-				sidebarViewObject.Prices[game] = pair.Value;
-			}
-
-			return sidebarViewObject;
 		}
 	}
 
@@ -291,7 +306,7 @@ namespace Calculator
 		public Currency Currency { get; set; }
 		public double ExchangeRate { get; set; }
 		public DateTime Datetime { get; set; }
-		public int UnknownGameCount { get; set; }
+		public ICollection<Game> UnknownGames { get; set; }
 	}
 
 	internal class SidebarViewObjectCache
@@ -300,7 +315,7 @@ namespace Calculator
 		public Currency Currency { get; set; }
 		public double ExchangeRate { get; set; } = 1;
 		public DateTime Datetime { get; set; }
-		public int UnknownGameCount { get; set; } = 0;
+		public ICollection<Guid> UnknownGames { get; set; }
 	}
 
 	internal class LibraryTracker
