@@ -21,6 +21,7 @@
 			<Setter Property="Margin" Value="30"/>
 		</Style>
 		<Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+			<Setter Property="IsHitTestVisible" Value="False" />
 			<Setter Property="Margin" Value="0,5,0,20" />
 			<Setter Property="SelectionMode" Value="Single" />
 			<Setter Property="SelectionUnit" Value="FullRow" />
@@ -220,6 +221,26 @@ VerticalAlignment="Center">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<TextBlock Text="{Binding Sum, Converter={StaticResource PlaytimeConverter}}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+			</StackPanel>
+			<StackPanel Style="{StaticResource GridCellContainer}">
+				<Border Style="{StaticResource GridHeader}">
+					<TextBlock Style="{StaticResource GridHeaderText}">
+			<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
+			<Run Text="Average price per hour" />
+					</TextBlock>
+				</Border>
+				<DataGrid ItemsSource="{Binding AveragePricePerHour}">
+					<DataGrid.Columns>
+						<DataGridTextColumn Binding="{Binding Group}" Width="*"/>
+						<DataGridTemplateColumn Width="*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Average, Converter={StaticResource MoneyFormatConverter}}" />
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>

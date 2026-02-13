@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Calculator
@@ -14,18 +15,18 @@ namespace Calculator
 		/// </summary>
 		/// <param name="currency">Currency name</param>
 		/// <returns>Exchange rate</returns>
-		public static async Task<double> GetExchangeRate(HttpClient client, string currency)
+		public static async Task<double> GetExchangeRate(HttpClient client, string currency, CancellationToken cancellationToken)
 		{
 			var currencyString = currency.ToString();
-			var response = await IfCancelledThenTimeout(client.GetAsync($"https://currencyrateapi.com/api/latest?base=USD&codes={currencyString}"));
+			var response = await IfCancelledThenTimeout(client.GetAsync($"https://currencyrateapi.com/api/latest?base=USD&codes={currencyString}", cancellationToken));
 			await ThrowOnBadHttpStatus(response);
 			var rate = await TryParse<ExchangeRate>(response, "Exchange rate");
 			return rate.rates[currencyString.ToLower()];
 		}
 
-		public static async Task<double> GetExchangeRate(HttpClient client, Currency currency)
+		public static async Task<double> GetExchangeRate(HttpClient client, Currency currency, CancellationToken cancellationToken)
 		{
-			return await GetExchangeRate(client, currency.ToString());
+			return await GetExchangeRate(client, currency.ToString(), cancellationToken);
 		}
 
 		private class ExchangeRate

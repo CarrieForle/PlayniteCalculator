@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -63,7 +64,7 @@ namespace Calculator
 		{
 			if (Settings.AutomaticUpdate == AutomaticUpdate.OnLibraryUpdate && libraryTracker.FoundNewGames)
 			{
-				_ = GetPrice(PlayniteApi.Database.Games);
+				_ = GetPrice(PlayniteApi.Database.Games, CancellationToken.None);
 				libraryTracker.Reset();
 			}
 		}
@@ -94,8 +95,8 @@ namespace Calculator
 
 					var actionRes = PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
-						sidebarViewObject = await GetPrice(games);
-					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
+						sidebarViewObject = await GetPrice(games, args.CancelToken);
+					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog"), true));
 
 					if (!(actionRes.Result ?? false) ||
 						!(actionRes.Error is null)
@@ -112,14 +113,15 @@ namespace Calculator
 			};
 		}
 
-		public async Task<SidebarViewObject> GetPrice(ICollection<Game> games)
+		public async Task<SidebarViewObject> GetPrice(ICollection<Game> games, CancellationToken cancellationToken)
 		{
 			Debug.Assert(games.HasItems());
+
 			using (HttpClient client = new HttpClient())
 			{
 				var DEFAULT_SHOP = ItadShop.Steam;
 				var names = games.Select(g => g.Name).ToArray();
-				var nameToItadIds = await ItadApi.LookUpGameId(client, names);
+				var nameToItadIds = await ItadApi.LookUpGameId(client, names, cancellationToken);
 				var input = new Dictionary<ItadShop, ICollection<string>>();
 				var itadIdsToGames = new Dictionary<string, List<Game>>();
 
@@ -152,12 +154,12 @@ namespace Calculator
 					}
 				}
 
-				var output = await ItadApi.PriceOverview(client, input, Settings.Country);
+				var output = await ItadApi.PriceOverview(client, input, Settings.Country, cancellationToken);
 				var currency = output.currency;
 				Task<double> currencyTask = null;
 				if (currency != default)
 				{
-					currencyTask = CurrencyApi.GetExchangeRate(client, currency);
+					currencyTask = CurrencyApi.GetExchangeRate(client, currency, cancellationToken);
 				}
 
 				var prices = new Dictionary<Game, Price>();
@@ -347,6 +349,6 @@ namespace Calculator
 
 	public interface ICalculator
 	{
-		Task<SidebarViewObject> GetPrice(ICollection<Game> games);
+		Task<SidebarViewObject> GetPrice(ICollection<Game> games, CancellationToken cancellationToken);
 	}
 }

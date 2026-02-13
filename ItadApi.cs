@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Calculator
@@ -20,9 +21,9 @@ namespace Calculator
 		/// </summary>
 		/// <param name="gameNames">An array of game names</param>
 		/// <returns>A dictionary of game names and their ITAD game IDs</returns>
-		public static async Task<IDictionary<string, string>> LookUpGameId(HttpClient client, ICollection<string> gameNames)
+		public static async Task<IDictionary<string, string>> LookUpGameId(HttpClient client, ICollection<string> gameNames, CancellationToken cancellationToken)
 		{
-			var response = await client.PostAsync($"https://api.isthereanydeal.com/lookup/id/title/v1?key={API_KEY}", JsonContentOf(gameNames));
+			var response = await client.PostAsync($"https://api.isthereanydeal.com/lookup/id/title/v1?key={API_KEY}", JsonContentOf(gameNames), cancellationToken);
 			await ThrowOnBadHttpStatus(response);
 			var res = Serialization.FromJsonStream<OrdinalIgnoreCaseStringDictionary<string>>(await response.Content.ReadAsStreamAsync());
 
@@ -33,7 +34,7 @@ namespace Calculator
 		/// Get price overview of the games
 		/// </summary>
 		/// <param name="input">A list of ITAD game ID categorized by their lookup shop</param>
-		public static async Task<PriceOverview> PriceOverview(HttpClient client, IDictionary<ItadShop, ICollection<string>> input, string country)
+		public static async Task<PriceOverview> PriceOverview(HttpClient client, IDictionary<ItadShop, ICollection<string>> input, string country, CancellationToken cancellationToken)
 		{
 			// ITAD accepts at most 200 games per request.
 			var shopToChunks = new Dictionary<ItadShop, List<List<string>>>();
@@ -67,7 +68,7 @@ namespace Calculator
 				var itadIdChunks = pair.Value;
 				foreach (var chunk in itadIdChunks)
 				{
-					var task = client.PostAsync($"https://api.isthereanydeal.com/games/overview/v2?key={API_KEY}&shops={(int)shop}&country={country}", JsonContentOf(chunk))
+					var task = client.PostAsync($"https://api.isthereanydeal.com/games/overview/v2?key={API_KEY}&shops={(int)shop}&country={country}", JsonContentOf(chunk), cancellationToken)
 						.ContinueWith(async (t) =>
 						{
 							var response = t.Result;

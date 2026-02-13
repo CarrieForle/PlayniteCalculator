@@ -152,6 +152,35 @@ namespace Calculator
 			}
 		}
 
+		public IList<PricePerHourGroup> AveragePricePerHour
+		{
+			get
+			{
+				return new List<PricePerHourGroup>
+				{
+					new PricePerHourGroup
+					{
+						Group = "All games",
+						Average = PricePerHour,
+					},
+					new PricePerHourGroup
+					{
+						Group = "Only paid games",
+						Average = PricedGames
+							.Where(g => g.Price > 0)
+							.Average(g => g.Price) / (TotalPlaytime / 3600),
+					},
+					new PricePerHourGroup
+					{
+						Group = "Only played games",
+						Average = PricedGames
+							.Where(g => g.Playtime > 0)
+							.Average(g => g.Price) / (TotalPlaytime / 3600),
+					},
+				};
+			}
+		}
+
 		private SidebarView(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject model)
 		{
 			this.plugin = plugin;
@@ -213,8 +242,13 @@ namespace Calculator
 				{
 					var res = api.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
-						instance.Model = await plugin.GetPrice(api.Database.Games);
-					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog")));
+						instance.Model = await plugin.GetPrice(api.Database.Games, args.CancelToken);
+					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog"), true));
+
+					if (res.Canceled)
+					{
+						return;
+					}
 
 					if (!(res.Error is null))
 					{
@@ -322,6 +356,11 @@ namespace Calculator
 	public class KindOnPlaytimeGroup : Groupable
 	{
 		public ulong Sum { get; set; } = 0;
+	}
+
+	public class PricePerHourGroup: Groupable
+	{
+		public double Average { get; set; } = 0;
 	}
 
 	public class PricedGames
