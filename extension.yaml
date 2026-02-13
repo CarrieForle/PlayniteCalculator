@@ -1,7 +1,10 @@
-﻿Id: Calculator_e5da871f-1b18-424b-8bea-ab829b044da9
+Id: Calculator_e5da871f-1b18-424b-8bea-ab829b044da9
 Name: Calculator
 Author: CarrieForle
 Version: 1.0
 Module: Calculator.dll
 Type: GenericPlugin
 Icon: Assets/icon.png
+Links:
+  - Name: GitHub
+  - Url: https://github.com/CarrieForle/PlayniteCalculator
