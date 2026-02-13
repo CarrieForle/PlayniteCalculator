@@ -12,9 +12,10 @@
 	<sys:String x:Key="LOCCalculatorCountryToolTip">Use the format of ISO 3166-1 Alpha-2. It should be two letter</sys:String>
 	<sys:String x:Key="LOCCalculatorCountryTableLinkText">Country code table</sys:String>
 	<sys:String x:Key="LOCCalculatorPlaytimeLabel">Playtime display:</sys:String>
+	<sys:String x:Key="LOCCalculatorPlaytimePaddingZero">Padding zero</sys:String>
 	<sys:String x:Key="LOCCalculatorAutomaticUpdateLabel">Automatically recalculate statistic:</sys:String>
 	<sys:String x:Key="LOCCalculatorDarkModeCheckbox">Enable dark mode</sys:String>
-	<sys:String x:Key="LOCCalculatorDarkModeCheckboxToolTip" xml:space="preserve">This only changes text color and does not change the background.
+	<sys:String x:Key="LOCCalculatorDarkModeCheckboxToolTip" xml:space="preserve">This only changes text and table color. It does not change the background.
 To change the background, please use an appropriate theme or use ThemeModifier.</sys:String>
 	<sys:String x:Key="LOCCalculatorItadRequestDialog">Helping you get disappointed in your life...</sys:String>
 	<sys:String x:Key="LOCCalculatorUnknownError">An unknown error occurred while calculating your account worth.</sys:String>

@@ -1,5 +1,8 @@
 namespace Calculator
 {
+	using System.Text;
+	using static PlaytimeHelper.PlaytimeDisplayFormat;
+
 	public class PlaytimeHelper
 	{
 		public enum PlaytimeDisplayFormat
@@ -24,37 +27,94 @@ namespace Calculator
 
 			switch (mode)
 			{
-				case PlaytimeDisplayFormat.Second:
+				case Second:
 					return $"{seconds}s";
-				case PlaytimeDisplayFormat.Minute:
+				case Minute:
 					return $"{minutes}m";
-				case PlaytimeDisplayFormat.MinuteSecond:
-					seconds %= 60;
-					return paddingZero ? $"{minutes}m {seconds}s" : $"{minutes}m {seconds:D2}s";
-				case PlaytimeDisplayFormat.Hour:
+				case Hour:
 					return $"{hours}h";
-				case PlaytimeDisplayFormat.HourMinute:
+				case Day:
+					return $"{days}d";
+			}
+
+			string Format(ulong? d, ulong? h, ulong? m, ulong? s)
+			{
+				var sb = new StringBuilder();
+
+				bool startPadding = false;
+
+				if (!(d is null) && d > 0)
+				{
+					sb.Append($" {d:D2}d");
+					startPadding = paddingZero;
+				}
+
+				if (!(h is null) && h > 0)
+				{
+					if (startPadding)
+					{
+						sb.Append($" {h:D2}h");
+					}
+					else
+					{
+						sb.Append($" {h}h");
+						startPadding = paddingZero;
+					}
+				}
+
+				if (!(m is null) && m > 0)
+				{
+					if (startPadding)
+					{
+						sb.Append($" {m:D2}m");
+					}
+					else
+					{
+						sb.Append($" {m}m");
+						startPadding = paddingZero;
+					}
+				}
+
+				if (!(s is null) && s > 0)
+				{
+					if (startPadding)
+					{
+						sb.Append($" {s:D2}s");
+					}
+					else
+					{
+						sb.Append($" {s}s");
+					}
+				}
+
+				return sb.ToString().Trim();
+			}
+
+			switch (mode)
+			{
+				case MinuteSecond:
+					seconds %= 60;
+					return Format(null, null, minutes, seconds);
+				case HourMinute:
 					minutes %= 60;
-					return paddingZero ? $"{hours}h {minutes}m" : $"{hours}h {minutes:D2}m";
-				case PlaytimeDisplayFormat.HourMinuteSecond:
+					return Format(null, hours, minutes, null);
+				case HourMinuteSecond:
 					minutes %= 60;
 					seconds %= 60;
-					return paddingZero ? $"{hours}h {minutes}m {seconds}s" : $"{hours}h {minutes:D2}m {seconds:D2}s";
-				case PlaytimeDisplayFormat.Day:
-					return $"{days}d";
-				case PlaytimeDisplayFormat.DayHour:
+					return Format(null, hours, minutes, seconds);
+				case DayHour:
 					hours %= 24;
-					return paddingZero ? $"{days}d {hours}h" : $"{days}d {hours:D2}h";
-				case PlaytimeDisplayFormat.DayHourMinute:
+					return Format(days, hours, null, null);
+				case DayHourMinute:
 					hours %= 24;
 					minutes %= 60;
-					return paddingZero ? $"{days}d {hours}h {minutes}m" : $"{days}d {hours:D2}h {minutes:D2}m";
-				case PlaytimeDisplayFormat.DayHourMinuteSecond:
+					return Format(days, hours, minutes, null);
+				case DayHourMinuteSecond:
 				default:
 					hours %= 24;
 					minutes %= 60;
 					seconds %= 60;
-					return paddingZero ? $"{days}d {hours}h {minutes}m {seconds}s" : $"{days}d {hours:D2}h {minutes:D2}m {seconds:D2}s";
+					return Format(days, hours, minutes, seconds);
 			}
 		}
 	}

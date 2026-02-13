@@ -66,6 +66,7 @@
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
 			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayFormat}" ItemsSource="{Binding PlaytimeValues, Mode=OneTime}" MinWidth="100" />
+			<CheckBox Content="{DynamicResource LOCCalculatorPlaytimePaddingZero}" IsChecked="{Binding Settings.PlaytimePaddingZero}" />
 		</StackPanel>
 		<StackPanel Orientation="Horizontal">
 			<Label Content="{DynamicResource LOCCalculatorAutomaticUpdateLabel}" Target="{Binding ElementName=AutomaticUpdate}" />

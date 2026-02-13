@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Markup;
 using System.Windows.Media;
 
 namespace Calculator
@@ -35,17 +34,17 @@ namespace Calculator
 
 		public Game[] PlayedGames => Games.Where(g => g.Playtime >= 1).ToArray();
 		public ICollection<Game> Games => Model.Prices.Keys.Union(Model.UnknownGames).ToArray();
-		public ICollection<GameView> GameViews => Model.Prices.Select(pair =>
+		public ICollection<PricedGames> PricedGames => Model.Prices.Select(pair =>
 		{
 			Game game = pair.Key;
 			double price = pair.Value.price;
 
-			return new GameView(game, price);
+			return new PricedGames(game, price);
 		}).ToArray();
 
-		public ICollection<PlaytimeGroup> GamesByPlaytime => GroupBy<PlaytimeGroup>(
-				GameViews,
-				new Dictionary<string, Func<GameView, bool>>
+		public IList<PlaytimeGroup> GamesByPlaytime => GroupBy<PlaytimeGroup, Game>(
+				Games,
+				new Dictionary<string, Func<Game, bool>>
 				{
 					["25 or more hours"] = g => g.Playtime >= 25 * 3600,
 					["12 to 25 hours"] = g => g.Playtime >= 12 * 3600,
@@ -59,7 +58,7 @@ namespace Calculator
 				playtime => playtime.Sum++
 			);
 
-		public ICollection<CostGroup> GamesByCost
+		public IList<CostGroup> GamesByCost
 		{
 			get
 			{
@@ -82,9 +81,9 @@ namespace Calculator
 					costLevelString[i] = $"{low} - {high}";
 				}
 
-				var res = GroupBy<CostGroup>(
-					GameViews,
-					new Dictionary<string, Func<GameView, bool>>
+				var res = GroupBy<CostGroup, PricedGames>(
+					PricedGames,
+					new Dictionary<string, Func<PricedGames, bool>>
 					{
 						[costLevelString[0]] = g => g.Price >= costLevel[0],
 
@@ -120,6 +119,39 @@ namespace Calculator
 			}
 		}
 
+		public IList<KindOnPlaytimeGroup> PlaytimeByKind
+		{
+			get
+			{
+				var res = GroupBy<KindOnPlaytimeGroup, PricedGames>(
+					PricedGames,
+					new Dictionary<string, Func<PricedGames, bool>>
+					{
+						["In paid games"] = g => g.Price > 0,
+					},
+					"In free games",
+					playtime => playtime.Sum++
+				);
+
+				res.Add(new KindOnPlaytimeGroup
+				{
+					Group = ResourceProvider.GetString("LOCCalculatorSidebarUnknown"),
+					Sum = Model.UnknownGames.Aggregate(
+						0UL,
+						(a, g) => a + g.Playtime
+					),
+				});
+
+				res.Add(new KindOnPlaytimeGroup
+				{
+					Group = "Total",
+					Sum = TotalPlaytime,
+				});
+
+				return res;
+			}
+		}
+
 		private SidebarView(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject model)
 		{
 			this.plugin = plugin;
@@ -128,7 +160,9 @@ namespace Calculator
 			Model = model;
 
 			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayFormat, Settings.PlaytimePaddingZero);
-			Resources.Add("PlaytimeConverter", playtimeConverter);
+			var moneyFormatConverter = new MoneyFormatConverter(Settings.MoneyFormat);
+			Resources["PlaytimeConverter"] = playtimeConverter;
+			Resources["MoneyFormatConverter"] = moneyFormatConverter;
 
 			DataContext = this;
 			InitializeComponent();
@@ -210,24 +244,35 @@ namespace Calculator
 		}
 
 		// Dictionary preserve insertion order provided we never do deletion.
-		private static ICollection<T> GroupBy<T>(
-			ICollection<GameView> games,
-			Dictionary<string, Func<GameView, bool>> predicates,
+		/// <summary>
+		/// Group bunch of games by a certain predicate
+		/// </summary>
+		/// <typeparam name="GroupT">The type of group</typeparam>
+		/// <typeparam name="GameT">The type of things to be grouped</typeparam>
+		/// <param name="games">The games to be grouped</param>
+		/// <param name="predicates">
+		///	Define groups by their names and the condition for each group</param>
+		/// <param name="defaultGroup">The fallback group if none predicate matches</param>
+		/// <param name="action">What to do after a predicate matches</param>
+		/// <returns>Groups</returns>
+		private static IList<GroupT> GroupBy<GroupT, GameT>(
+			ICollection<GameT> games,
+			Dictionary<string, Func<GameT, bool>> predicates,
 			string defaultGroup,
-			Action<T> action
+			Action<GroupT> action
 		)
-			where T : Groupable, new()
+			where GroupT : Groupable, new()
 		{
-			var grouping = new Dictionary<string, T>(predicates.Count);
+			var grouping = new Dictionary<string, GroupT>(predicates.Count);
 			foreach (string group in predicates.Keys)
 			{
-				grouping.Add(group, new T
+				grouping.Add(group, new GroupT
 				{
 					Group = group,
 				});
 			}
 
-			grouping.Add(defaultGroup, new T
+			grouping.Add(defaultGroup, new GroupT
 			{
 				Group = defaultGroup,
 			});
@@ -247,7 +292,7 @@ namespace Calculator
 					}
 				}
 
-				T _obj = grouping[defaultGroup];
+				GroupT _obj = grouping[defaultGroup];
 				_obj.Group = defaultGroup;
 				action(_obj);
 
@@ -274,12 +319,17 @@ namespace Calculator
 		public int Acc { get; set; } = 0;
 	}
 
-	public class GameView
+	public class KindOnPlaytimeGroup : Groupable
 	{
-		private Game game;
-		private double price;
+		public ulong Sum { get; set; } = 0;
+	}
 
-		public GameView(Game game, double price)
+	public class PricedGames
+	{
+		private readonly Game game;
+		private readonly double price;
+
+		public PricedGames(Game game, double price)
 		{
 			this.game = game;
 			this.price = price;
@@ -291,17 +341,22 @@ namespace Calculator
 		public double Price => price;
 	}
 
-	public class NumberFormatConverter : IMultiValueConverter
+	[ValueConversion(typeof(string), typeof(string))]
+	public class MoneyFormatConverter : IValueConverter
 	{
-		public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+		private readonly string format;
+		public MoneyFormatConverter(string format)
 		{
-			double amount = (double)values[0];
-			string format = values[1].ToString();
+			this.format = format;
+		}
 
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			double amount = (double)value;
 			return string.Format(format, amount);
 		}
 
-		public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			throw new NotImplementedException();
 		}
@@ -328,30 +383,6 @@ namespace Calculator
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			throw new NotImplementedException();
-		}
-	}
-
-	public class MoneyBinding : MarkupExtension
-	{
-		public string Path { get; set; }
-
-		public MoneyBinding(string path)
-		{
-			Path = path;
-		}
-
-		public override object ProvideValue(IServiceProvider serviceProvider)
-		{
-			var multiBinding = new MultiBinding
-			{
-				Converter = new NumberFormatConverter(),
-				Mode = BindingMode.OneTime,
-			};
-
-			multiBinding.Bindings.Add(new Binding(Path));
-			multiBinding.Bindings.Add(new Binding("Settings.MoneyFormat"));
-
-			return multiBinding.ProvideValue(serviceProvider);
 		}
 	}
 }
