@@ -34,6 +34,11 @@ namespace Calculator
 
 		public Game[] PlayedGames => Games.Where(g => g.Playtime >= 1).ToArray();
 		public ICollection<Game> Games => Model.Prices.Keys.Union(Model.UnknownGames).ToArray();
+
+		/// <summary>
+		/// Games who has an ITAD price entry. 
+		/// It doesn't meat it's paid.
+		/// </summary>
 		public ICollection<PricedGames> PricedGames => Model.Prices.Select(pair =>
 		{
 			Game game = pair.Key;
@@ -168,14 +173,14 @@ namespace Calculator
 						Group = "Only paid games",
 						Average = PricedGames
 							.Where(g => g.Price > 0)
-							.Average(g => g.Price) / (TotalPlaytime / 3600),
+							.Sum(g => g.Price) / (TotalPlaytime / 3600),
 					},
 					new PricePerHourGroup
 					{
 						Group = "Only played games",
 						Average = PricedGames
 							.Where(g => g.Playtime > 0)
-							.Average(g => g.Price) / (TotalPlaytime / 3600),
+							.Sum(g => g.Price) / (TotalPlaytime / 3600),
 					},
 				};
 			}

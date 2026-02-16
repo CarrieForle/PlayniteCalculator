@@ -133,7 +133,7 @@ VerticalAlignment="Center">
 				<TextBlock Text="Lowest prices" HorizontalAlignment="Center" FontSize="18" />
 			</StackPanel>
 			<StackPanel Margin="30,0">
-				<TextBlock Text="{Binding TotalSpentIfDiscountedPrice, Converter={StaticResource MoneyFormatConverter}}" d:Text="$4,999" FontSize="48" FontWeight="Bold" d:Foreground="{StaticResource RegularPriceBrush}">
+				<TextBlock Text="{Binding TotalSpentIfRegularPrice, Converter={StaticResource MoneyFormatConverter}}" d:Text="$4,999" FontSize="48" FontWeight="Bold" d:Foreground="{StaticResource RegularPriceBrush}">
 					<TextBlock.Style>
 						<Style TargetType="TextBlock">
 							<Style.Triggers>
@@ -175,78 +175,89 @@ VerticalAlignment="Center">
 			<StackPanel Style="{StaticResource Card}">
 				<TextBlock Text="Total playtime" Style="{StaticResource LabelStyle}"/>
 				<TextBlock Text="{Binding TotalPlaytime, Converter={StaticResource PlaytimeConverter}, Mode=OneTime}" d:Text="4000 h" Style="{StaticResource ValueStyle}"/>
-			</StackPanel>
+		</StackPanel>
 		</WrapPanel>
-		<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-			<StackPanel Style="{StaticResource GridCellContainer}">
-				<Border Style="{StaticResource GridHeader}">
-					<TextBlock Style="{StaticResource GridHeaderText}">
-						<Run Text="&#xeedc;" FontFamily="{DynamicResource FontIcoFont}" />
-						<Run Text="Games by time played" />
-					</TextBlock>
-				</Border>
-				<DataGrid ItemsSource="{Binding GamesByPlaytime}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Binding="{Binding Group}" Width="*" />
-						<DataGridTextColumn Binding="{Binding Sum}" Width="*" />
-					</DataGrid.Columns>
-				</DataGrid>
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition />
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition />
+				<ColumnDefinition />
+			</Grid.ColumnDefinitions>
+			<StackPanel Grid.Row="0" Grid.Column="0">
+				<StackPanel Style="{StaticResource GridCellContainer}">
+					<Border Style="{StaticResource GridHeader}">
+						<TextBlock Style="{StaticResource GridHeaderText}">
+				<Run Text="&#xeedc;" FontFamily="{DynamicResource FontIcoFont}" />
+				<Run Text="Games by time played" />
+						</TextBlock>
+					</Border>
+					<DataGrid ItemsSource="{Binding GamesByPlaytime}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Binding="{Binding Group}" Width="*" />
+							<DataGridTextColumn Binding="{Binding Sum}" Width="*" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</StackPanel>
+				<StackPanel Style="{StaticResource GridCellContainer}">
+					<Border Style="{StaticResource GridHeader}">
+						<TextBlock Style="{StaticResource GridHeaderText}">
+				<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
+				<Run Text="Hours on record" />
+						</TextBlock>
+					</Border>
+					<DataGrid ItemsSource="{Binding PlaytimeByKind}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Binding="{Binding Group}" Width="*"/>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Sum, Converter={StaticResource PlaytimeConverter}}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+				</StackPanel>
 			</StackPanel>
-			<StackPanel Style="{StaticResource GridCellContainer}">
-				<Border Style="{StaticResource GridHeader}">
-					<TextBlock Style="{StaticResource GridHeaderText}">
+			<StackPanel Grid.Row="0" Grid.Column="1">
+				<StackPanel Style="{StaticResource GridCellContainer}">
+					<Border Style="{StaticResource GridHeader}">
+						<TextBlock Style="{StaticResource GridHeaderText}">
 						<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
 						<Run Text="Products by cost" />
-					</TextBlock>
-				</Border>
-				<DataGrid ItemsSource="{Binding GamesByCost}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Binding="{Binding Group}" Width="2*"/>
-						<DataGridTextColumn Binding="{Binding Sum}" Width="*" />
-						<DataGridTextColumn Binding="{Binding Acc}" Width="*" FontStyle="Italic" Foreground="{DynamicResource TextBrushDarker}" />
-					</DataGrid.Columns>
-				</DataGrid>
+						</TextBlock>
+					</Border>
+					<DataGrid ItemsSource="{Binding GamesByCost}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Binding="{Binding Group}" Width="2*"/>
+							<DataGridTextColumn Binding="{Binding Sum}" Width="*" />
+							<DataGridTextColumn Binding="{Binding Acc}" Width="*" FontStyle="Italic" Foreground="{DynamicResource TextBrushDarker}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</StackPanel>
+				<StackPanel Style="{StaticResource GridCellContainer}">
+					<Border Style="{StaticResource GridHeader}">
+						<TextBlock Style="{StaticResource GridHeaderText}">
+<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
+<Run Text="Average price per hour" />
+						</TextBlock>
+					</Border>
+					<DataGrid ItemsSource="{Binding AveragePricePerHour}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Binding="{Binding Group}" Width="*"/>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Average, Converter={StaticResource MoneyFormatConverter}}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+				</StackPanel>
 			</StackPanel>
-			<StackPanel Style="{StaticResource GridCellContainer}">
-				<Border Style="{StaticResource GridHeader}">
-					<TextBlock Style="{StaticResource GridHeaderText}">
-						<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
-						<Run Text="Hours on record" />
-					</TextBlock>
-				</Border>
-				<DataGrid ItemsSource="{Binding PlaytimeByKind}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Binding="{Binding Group}" Width="*"/>
-						<DataGridTemplateColumn Width="*">
-							<DataGridTemplateColumn.CellTemplate>
-								<DataTemplate>
-									<TextBlock Text="{Binding Sum, Converter={StaticResource PlaytimeConverter}}" />
-								</DataTemplate>
-							</DataGridTemplateColumn.CellTemplate>
-						</DataGridTemplateColumn>
-					</DataGrid.Columns>
-				</DataGrid>
-			</StackPanel>
-			<StackPanel Style="{StaticResource GridCellContainer}">
-				<Border Style="{StaticResource GridHeader}">
-					<TextBlock Style="{StaticResource GridHeaderText}">
-			<Run Text="&#xf024;" FontFamily="{DynamicResource FontIcoFont}" />
-			<Run Text="Average price per hour" />
-					</TextBlock>
-				</Border>
-				<DataGrid ItemsSource="{Binding AveragePricePerHour}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Binding="{Binding Group}" Width="*"/>
-						<DataGridTemplateColumn Width="*">
-							<DataGridTemplateColumn.CellTemplate>
-								<DataTemplate>
-									<TextBlock Text="{Binding Average, Converter={StaticResource MoneyFormatConverter}}" />
-								</DataTemplate>
-							</DataGridTemplateColumn.CellTemplate>
-						</DataGridTemplateColumn>
-					</DataGrid.Columns>
-				</DataGrid>
-			</StackPanel>
-		</WrapPanel>
+		</Grid>
 	</StackPanel>
 </UserControl>
