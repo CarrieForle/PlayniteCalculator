@@ -60,6 +60,7 @@ VerticalAlignment="Center">
 				</Trigger>
 			</Style.Triggers>
 		</Style>
+		<Style x:Key="DefaultDataGrid" TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}" />
 		<Style TargetType="DataGridRow">
 			<Setter Property="Background" Value="{x:Null}" />
 			<Style.Triggers>
@@ -107,6 +108,7 @@ VerticalAlignment="Center">
 			<Setter Property="Width" Value="490" />
 			<Setter Property="Margin" Value="5,0" />
 		</Style>
+		<CollectionViewSource x:Key="GameViews" Source="{Binding TopOwnedGames}" />
 		<SolidColorBrush x:Key="DiscountedPriceBrush" Color="#FF1B8F1B" />
 		<SolidColorBrush x:Key="DiscountedPriceBrushDark" Color="#FF39D439" />
 		<SolidColorBrush x:Key="RegularPriceBrush" Color="#FFA74F39" />
@@ -259,5 +261,37 @@ VerticalAlignment="Center">
 				</StackPanel>
 			</StackPanel>
 		</Grid>
+		<DataGrid Style="{StaticResource DefaultDataGrid}" ItemsSource="{Binding Source={StaticResource GameViews}}">
+			<DataGrid.Columns>
+				<DataGridTemplateColumn Width="auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Image Source="{Binding IconSource}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn Binding="{Binding Name}" Width="*"/>
+				<DataGridTemplateColumn Width="auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock>
+								<TextBlock.Style>
+									<Style TargetType="TextBlock">
+										<Setter Property="Text" Value="{Binding PricePerHour, Converter={StaticResource MoneyFormatConverter}}" />
+										<Style.Triggers>
+											<DataTrigger Binding="{Binding PricePerHour}" Value="{x:Null}">
+												<Setter Property="Text" Value="-" />
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</TextBlock.Style>
+							</TextBlock>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn Binding="{Binding Price, Converter={StaticResource MoneyFormatConverter}}" Width="auto" />
+				<DataGridTextColumn Binding="{Binding Time, Converter={StaticResource PlaytimeConverter}}" Width="auto" />
+			</DataGrid.Columns>
+		</DataGrid>
 	</StackPanel>
 </UserControl>

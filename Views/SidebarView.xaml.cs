@@ -3,14 +3,15 @@ using Playnite.SDK;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
-using System.Windows;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Calculator
 {
@@ -20,50 +21,53 @@ namespace Calculator
 		private readonly ICalculator plugin;
 		public CalculatorSettings Settings { get; }
 		public IPlayniteAPI PlayniteApi { get; }
-		public SidebarViewObject Model { get; set; }
+		private SidebarViewObject model;
+		public SidebarViewObject Model 
+		{ 
+			get
+			{
+				return model;
+			}
+			set
+			{
+				model = value;
+				SetProperties();
+			}
+		}
 
-		public double TotalSpentIfRegularPrice => Model.Prices.Sum(pair => pair.Value.price);
-		public double TotalSpentIfDiscountedPrice => Model.Prices.Sum(pair => pair.Value.lowPrice);
-		public double AveragePrice => Model.Prices.Average(pair => pair.Value.price);
-		public double PricePerHour => TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
-		public ulong TotalPlaytime => PlayniteApi.Database.Games.Aggregate(
-			0UL,
-			(a, g) => a + g.Playtime
-		);
-		public double PlayedGamesRatio => (double)PlayedGames.Count() / Games.Count;
+		public double TotalSpentIfRegularPrice { get; private set; }
+		public double TotalSpentIfDiscountedPrice { get; private set; }
+		public double AveragePrice { get; private set; }
+		public double PricePerHour { get; private set; }
+		public ulong TotalPlaytime { get; private set; }
 
-		public Game[] PlayedGames => Games.Where(g => g.Playtime >= 1).ToArray();
-		public ICollection<Game> Games => Model.Prices.Keys.Union(Model.UnknownGames).ToArray();
+		public double PlayedGamesRatio { get; private set; }
+		public Game[] PlayedGames { get; private set; }
+		public ICollection<Game> Games { get; private set; }
 
 		/// <summary>
 		/// Games who has an ITAD price entry. 
 		/// It doesn't meat it's paid.
 		/// </summary>
-		public ICollection<PricedGames> PricedGames => Model.Prices.Select(pair =>
-		{
-			Game game = pair.Key;
-			double price = pair.Value.price;
+		public ICollection<PricedGames> PricedGames { get; private set; }
 
-			return new PricedGames(game, price);
-		}).ToArray();
+		public IEnumerable<PlaytimeGroup> GamesByPlaytime => GroupBy<PlaytimeGroup, Game>(
+			Games,
+			new Dictionary<string, Func<Game, bool>>
+			{
+				["25 or more hours"] = g => g.Playtime >= 25 * 3600,
+				["12 to 25 hours"] = g => g.Playtime >= 12 * 3600,
+				["6 to 12 hours"] = g => g.Playtime >= 6 * 3600,
+				["3 to 6 hours"] = g => g.Playtime >= 3 * 3600,
+				["2 to 3 hours"] = g => g.Playtime >= 2 * 3600,
+				["1 to 2 hours"] = g => g.Playtime >= 3600,
+				["0 to 1 hours"] = g => g.Playtime > 0,
+			},
+			ResourceProvider.GetString("LOCCalculatorSidebarLowestPlaytimeLevel"),
+			playtime => playtime.Sum++
+		);
 
-		public IList<PlaytimeGroup> GamesByPlaytime => GroupBy<PlaytimeGroup, Game>(
-				Games,
-				new Dictionary<string, Func<Game, bool>>
-				{
-					["25 or more hours"] = g => g.Playtime >= 25 * 3600,
-					["12 to 25 hours"] = g => g.Playtime >= 12 * 3600,
-					["6 to 12 hours"] = g => g.Playtime >= 6 * 3600,
-					["3 to 6 hours"] = g => g.Playtime >= 3 * 3600,
-					["2 to 3 hours"] = g => g.Playtime >= 2 * 3600,
-					["1 to 2 hours"] = g => g.Playtime >= 3600,
-					["0 to 1 hours"] = g => g.Playtime > 0,
-				},
-				ResourceProvider.GetString("LOCCalculatorSidebarLowestPlaytimeLevel"),
-				playtime => playtime.Sum++
-			);
-
-		public IList<CostGroup> GamesByCost
+		public IEnumerable<CostGroup> GamesByCost
 		{
 			get
 			{
@@ -90,19 +94,19 @@ namespace Calculator
 					PricedGames,
 					new Dictionary<string, Func<PricedGames, bool>>
 					{
-						[costLevelString[0]] = g => g.Price >= costLevel[0],
+						[costLevelString[0]] = g => g.price >= costLevel[0],
 
-						[costLevelString[1]] = g => g.Price >= costLevel[1],
+						[costLevelString[1]] = g => g.price >= costLevel[1],
 
-						[costLevelString[2]] = g => g.Price >= costLevel[2],
+						[costLevelString[2]] = g => g.price >= costLevel[2],
 
-						[costLevelString[3]] = g => g.Price >= costLevel[3],
+						[costLevelString[3]] = g => g.price >= costLevel[3],
 
-						[costLevelString[4]] = g => g.Price >= costLevel[4],
+						[costLevelString[4]] = g => g.price >= costLevel[4],
 
-						[costLevelString[5]] = g => g.Price >= costLevel[5],
+						[costLevelString[5]] = g => g.price >= costLevel[5],
 
-						[costLevelString[6]] = g => g.Price > 0,
+						[costLevelString[6]] = g => g.price > 0,
 					},
 					ResourceProvider.GetString("LOCCalculatorSidebarLowestCostLevel"),
 					price => price.Sum++
@@ -124,7 +128,7 @@ namespace Calculator
 			}
 		}
 
-		public IList<KindOnPlaytimeGroup> PlaytimeByKind
+		public IEnumerable<KindOnPlaytimeGroup> PlaytimeByKind
 		{
 			get
 			{
@@ -132,7 +136,7 @@ namespace Calculator
 					PricedGames,
 					new Dictionary<string, Func<PricedGames, bool>>
 					{
-						["In paid games"] = g => g.Price > 0,
+						["In paid games"] = g => g.price > 0,
 					},
 					"In free games",
 					playtime => playtime.Sum++
@@ -157,7 +161,7 @@ namespace Calculator
 			}
 		}
 
-		public IList<PricePerHourGroup> AveragePricePerHour
+		public IEnumerable<PricePerHourGroup> AveragePricePerHour
 		{
 			get
 			{
@@ -172,17 +176,39 @@ namespace Calculator
 					{
 						Group = "Only paid games",
 						Average = PricedGames
-							.Where(g => g.Price > 0)
-							.Sum(g => g.Price) / (TotalPlaytime / 3600),
+							.Where(g => g.price > 0)
+							.Sum(g => g.price) / (TotalPlaytime / 3600),
 					},
 					new PricePerHourGroup
 					{
 						Group = "Only played games",
 						Average = PricedGames
-							.Where(g => g.Playtime > 0)
-							.Sum(g => g.Price) / (TotalPlaytime / 3600),
+							.Where(g => g.game.Playtime > 0)
+							.Sum(g => g.price) / (TotalPlaytime / 3600),
 					},
 				};
+			}
+		}
+
+		public IEnumerable<GameView> TopOwnedGames
+		{
+			get
+			{
+				var a = PricedGames;
+				var rb = Model.UnknownGames;
+
+				var pricedGameViews =
+					from g in a
+					select new GameView(g);
+
+				var unknownGameViews =
+					from g in rb
+					select new GameView(g);
+
+				return pricedGameViews
+					.Union(unknownGameViews)
+					.OrderBy(g => g.PricePerHour ?? double.MaxValue)
+					.Take(10);
 			}
 		}
 
@@ -203,7 +229,7 @@ namespace Calculator
 			SetGamesPlayedInfo();
 		}
 
-		private void SetGamesPlayedInfo()
+		internal void SetGamesPlayedInfo()
 		{
 			string gamesPlayedText = Localized("LOCCalculatorSidebarGamesPlayed", PlayedGames.Count(), Games.Count());
 			string[] parts = Regex.Split(gamesPlayedText, @"\d+", RegexOptions.CultureInvariant);
@@ -234,6 +260,29 @@ namespace Calculator
 			GamesPlayedInfo.Inlines.Add(new Run(parts.Last()));
 		}
 
+		private void SetProperties()
+		{
+			Games = Model.Prices.Keys.Union(Model.UnknownGames).ToArray();
+			PlayedGames = Games.Where(g => g.Playtime >= 1).ToArray();
+			PricedGames = Model.Prices.Select(pair =>
+			{
+				Game game = pair.Key;
+				double price = pair.Value.price;
+
+				return new PricedGames(game, price);
+			}).ToArray();
+
+			TotalSpentIfRegularPrice = PricedGames.Sum(g => g.price);
+			TotalSpentIfDiscountedPrice = Model.Prices.Sum(pair => pair.Value.lowPrice);
+			AveragePrice = PricedGames.Average(g => g.price);
+			PricePerHour = TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
+			TotalPlaytime = Games.Aggregate(
+				0UL,
+				(a, g) => a + g.Playtime
+			);
+			PlayedGamesRatio = (double)PlayedGames.Length / Games.Count;
+		}
+
 		public static UserControl Create(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject historicalLows)
 		{
 			var instance = new SidebarView(plugin, settings, api, historicalLows);
@@ -248,6 +297,7 @@ namespace Calculator
 					var res = api.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
 						instance.Model = await plugin.GetPrice(api.Database.Games, args.CancelToken);
+						instance.SetGamesPlayedInfo();
 					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog"), true));
 
 					if (res.Canceled)
@@ -335,7 +385,7 @@ namespace Calculator
 				_obj.Group = defaultGroup;
 				action(_obj);
 
-				NextOuterIteration:;
+			NextOuterIteration:;
 			}
 
 			return grouping.Values.ToList();
@@ -363,26 +413,67 @@ namespace Calculator
 		public ulong Sum { get; set; } = 0;
 	}
 
-	public class PricePerHourGroup: Groupable
+	public class PricePerHourGroup : Groupable
 	{
 		public double Average { get; set; } = 0;
 	}
 
 	public class PricedGames
 	{
-		private readonly Game game;
-		private readonly double price;
+		public readonly Game game;
+		public readonly double price;
 
 		public PricedGames(Game game, double price)
 		{
 			this.game = game;
 			this.price = price;
 		}
+	}
 
-		public string Name => game.Name;
-		public string Icon => game.Icon;
-		public ulong Playtime => game.Playtime;
-		public double Price => price;
+	public class GameView
+	{
+		private readonly Uri iconSource;
+		public double Price { get; }
+		public ulong Time { get; }
+		public string Name { get; }
+		public ImageSource IconSource
+		{
+			get
+			{
+				return new BitmapImage(iconSource);
+			}
+		}
+		public double? PricePerHour
+		{
+			get
+			{
+				if (Price == 0 || Time == 0)
+				{
+					return null;
+				}
+				else
+				{
+					return Price / (Time / 3600);
+				}
+			}
+		}
+
+		public GameView(Game game)
+		{
+			Price = 0;
+			Time = game.Playtime;
+			Name = game.Name;
+			try
+			{
+				//iconSource = new Uri(game.Icon);
+			}
+			catch { }
+		}
+
+		public GameView(PricedGames game): this(game.game)
+		{
+			Price = game.price;
+		}
 	}
 
 	[ValueConversion(typeof(string), typeof(string))]
