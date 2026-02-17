@@ -199,11 +199,11 @@ namespace Calculator
 
 				var pricedGameViews =
 					from g in a
-					select new GameView(g);
+					select new GameView(g, PlayniteApi);
 
 				var unknownGameViews =
 					from g in rb
-					select new GameView(g);
+					select new GameView(g, PlayniteApi);
 
 				return pricedGameViews
 					.Union(unknownGameViews)
@@ -272,14 +272,14 @@ namespace Calculator
 				return new PricedGames(game, price);
 			}).ToArray();
 
+			AveragePrice = PricedGames.Average(g => g.price);
 			TotalSpentIfRegularPrice = PricedGames.Sum(g => g.price);
 			TotalSpentIfDiscountedPrice = Model.Prices.Sum(pair => pair.Value.lowPrice);
-			AveragePrice = PricedGames.Average(g => g.price);
-			PricePerHour = TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
 			TotalPlaytime = Games.Aggregate(
 				0UL,
 				(a, g) => a + g.Playtime
 			);
+			PricePerHour = TotalSpentIfRegularPrice / (TotalPlaytime / 3600.0);
 			PlayedGamesRatio = (double)PlayedGames.Length / Games.Count;
 		}
 
@@ -436,13 +436,12 @@ namespace Calculator
 		public double Price { get; }
 		public ulong Time { get; }
 		public string Name { get; }
-		public ImageSource IconSource
+		public ImageSource IconSource => new BitmapImage(iconSource)
 		{
-			get
-			{
-				return new BitmapImage(iconSource);
-			}
-		}
+			DecodePixelHeight = 32,
+			DecodePixelWidth = 32,
+		};
+
 		public double? PricePerHour
 		{
 			get
@@ -458,19 +457,19 @@ namespace Calculator
 			}
 		}
 
-		public GameView(Game game)
+		public GameView(Game game, IPlayniteAPI api)
 		{
 			Price = 0;
 			Time = game.Playtime;
 			Name = game.Name;
 			try
 			{
-				//iconSource = new Uri(game.Icon);
+				iconSource = new Uri($"{api.Database.DatabasePath}\\files\\{game.Icon}");
 			}
 			catch { }
 		}
 
-		public GameView(PricedGames game): this(game.game)
+		public GameView(PricedGames game, IPlayniteAPI api) : this(game.game, api)
 		{
 			Price = game.price;
 		}
