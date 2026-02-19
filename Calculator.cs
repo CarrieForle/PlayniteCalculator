@@ -16,7 +16,7 @@ using System.Windows.Media;
 
 namespace Calculator
 {
-	public class Calculator : GenericPlugin, ICalculator
+	public class Calculator : GenericPlugin
 	{
 		private static readonly ILogger logger = LogManager.GetLogger();
 		private readonly LibraryTracker libraryTracker;
@@ -345,10 +345,5 @@ namespace Calculator
 		{
 			addedGames = new List<Game>();
 		}
-	}
-
-	public interface ICalculator
-	{
-		Task<SidebarViewObject> GetPrice(ICollection<Game> games, CancellationToken cancellationToken);
 	}
 }

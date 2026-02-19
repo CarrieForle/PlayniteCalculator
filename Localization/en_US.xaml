@@ -23,6 +23,7 @@ To change the background, please use an appropriate theme or use ThemeModifier.<
 	<sys:String x:Key="LOCCalculatorNoGame">Your library is empty. Add some games and come back again.</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarUnknown">Unknown</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarRefresh">Refresh</sys:String>
+	<sys:String x:Key="LOCCalculatorSidebarSettings">Settings</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarLastUpdated">Last updated: {0}</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarGamesPlayed">{0} out of {1} games played</sys:String>
 	<sys:String x:Key="LOCCalculatorSidebarHighestPlaytimeLevel">{0} or more hours</sys:String>

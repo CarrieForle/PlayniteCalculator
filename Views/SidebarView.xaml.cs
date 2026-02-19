@@ -18,7 +18,7 @@ namespace Calculator
 	using static PlaytimeHelper;
 	public partial class SidebarView : UserControl
 	{
-		private readonly ICalculator plugin;
+		private readonly Calculator plugin;
 		public CalculatorSettings Settings { get; }
 		public IPlayniteAPI PlayniteApi { get; }
 		private SidebarViewObject model;
@@ -212,7 +212,7 @@ namespace Calculator
 			}
 		}
 
-		private SidebarView(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject model)
+		private SidebarView(Calculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject model)
 		{
 			this.plugin = plugin;
 			Settings = settings;
@@ -283,13 +283,13 @@ namespace Calculator
 			PlayedGamesRatio = (double)PlayedGames.Length / Games.Count;
 		}
 
-		public static UserControl Create(ICalculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject historicalLows)
+		public static UserControl Create(Calculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject historicalLows)
 		{
 			var instance = new SidebarView(plugin, settings, api, historicalLows);
 			var control = new SidebarItemControl();
 			control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
 			control.AddContent(instance);
-			Button refreshBtn = new Button
+			Button refreshButton = new Button
 			{
 				Content = ResourceProvider.GetString("LOCCalculatorSidebarRefresh"),
 				Command = new RelayCommand(() =>
@@ -315,8 +315,18 @@ namespace Calculator
 					}
 				})
 			};
+			
+			control.AddHeader(refreshButton);
+			Button settingsButton = new Button
+			{
+				Content = ResourceProvider.GetString("LOCCalculatorSidebarSettings"),
+				Command = new RelayCommand(() =>
+				{
+					plugin.OpenSettingsView();
+				})
+			};
 
-			control.AddHeader(refreshBtn);
+			control.AddHeader(settingsButton);
 			control.AddHeader(new TextBlock
 			{
 				Text = Localized("LOCCalculatorSidebarLastUpdated", instance.Model.Datetime),
