@@ -207,8 +207,7 @@ namespace Calculator
 
 				return pricedGameViews
 					.Union(unknownGameViews)
-					.OrderBy(g => g.PricePerHour ?? double.MaxValue)
-					.Take(10);
+					.OrderBy(g => g.PricePerHour ?? double.MaxValue);
 			}
 		}
 
@@ -496,6 +495,14 @@ namespace Calculator
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
+			// This happens when binding TopOwnedGames. It would
+			// be better if this is in DataTrigger but it's
+			// not possible without other workarounds
+			if (value is null)
+			{
+				return "-";
+			}
+
 			double amount = (double)value;
 			return string.Format(format, amount);
 		}
