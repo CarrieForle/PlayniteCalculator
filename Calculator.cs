@@ -107,6 +107,7 @@ namespace Calculator
 
 					return SidebarView.Create(this, Settings, sidebarViewObject);
 				},
+				Title = ResourceProvider.GetString("LOCCalculator"),
 				Icon = icon,
 				Type = SiderbarItemType.View,
 				Visible = true,
