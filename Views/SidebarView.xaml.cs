@@ -230,6 +230,7 @@ namespace Calculator
 
 		internal void SetGamesPlayedInfo()
 		{
+			GamesPlayedInfo.Inlines.Clear();
 			string gamesPlayedText = Localized("LOCCalculatorSidebarGamesPlayed", PlayedGames.Count(), Games.Count());
 			string[] parts = Regex.Split(gamesPlayedText, @"\d+", RegexOptions.CultureInvariant);
 			var indexes = Regex.Matches(gamesPlayedText, @"\d+", RegexOptions.CultureInvariant)
@@ -296,7 +297,7 @@ namespace Calculator
 					var res = plugin.PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
 						instance.Model = await plugin.GetPrice(plugin.PlayniteApi.Database.Games, args.CancelToken);
-						instance.SetGamesPlayedInfo();
+						plugin.PlayniteApi.MainView.UIDispatcher.Invoke(instance.SetGamesPlayedInfo);
 					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog"), true));
 
 					if (res.Canceled)
