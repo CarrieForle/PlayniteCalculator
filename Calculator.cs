@@ -84,7 +84,7 @@ namespace Calculator
 
 						if (!(sidebarViewObject is null))
 						{
-							return SidebarView.Create(this, Settings, PlayniteApi, sidebarViewObject);
+							return SidebarView.Create(this, Settings, sidebarViewObject);
 						}
 					}
 
@@ -105,7 +105,7 @@ namespace Calculator
 						return SidebarErrorView.Create(actionRes.Error);
 					}
 
-					return SidebarView.Create(this, Settings, PlayniteApi, sidebarViewObject);
+					return SidebarView.Create(this, Settings, sidebarViewObject);
 				},
 				Icon = icon,
 				Type = SiderbarItemType.View,

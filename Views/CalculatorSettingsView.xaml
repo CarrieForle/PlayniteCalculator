@@ -1,4 +1,4 @@
-<UserControl x:Class="Calculator.CalculatorSettingsView"
+ <UserControl x:Class="Calculator.CalculatorSettingsView"
 			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,6 +10,7 @@
 	<UserControl.Resources>
 		<Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
 		</Style>
+		<!-- Style is opt-in because ComboBox is affected by this -->
 		<Style x:Key="BasicTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
 			<Setter Property="VerticalAlignment" Value="Center" />
 			<Setter Property="Margin" Value="5" />
@@ -39,41 +40,53 @@
 			<Setter Property="IsReadOnly" Value="True" />
 		</Style>
 	</UserControl.Resources>
-	<StackPanel Margin="25">
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
-			<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-			<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
-			<TextBlock Style="{StaticResource BasicTextBlock}">
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+		<StackPanel Margin="25">
+			<StackPanel Orientation="Horizontal">
+				<Label Content="{DynamicResource LOCCalculatorMoneyFormatLabel}" Target="{Binding ElementName=MoneyFormat}" />
+				<TextBox Name="MoneyFormat" MinWidth="100" Text="{Binding Settings.MoneyFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetFormat}" />
+				<TextBlock Style="{StaticResource BasicTextBlock}">
 				<Hyperlink NavigateUri="https://learn.microsoft.com/dotnet/standard/base-types/standard-numeric-format-strings#standard-format-specifiers" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
 					<Run Text="{DynamicResource LOCCalculatorMoneyFormatHelpLinkText}" />
 				</Hyperlink>
-			</TextBlock>
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
-			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted, Mode=OneWay}" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
-			<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
-			<TextBlock Style="{StaticResource BasicTextBlock}">
+				</TextBlock>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
+				<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding MoneyFormatted, Mode=OneWay}" />
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<Label Content="{DynamicResource LOCCalculatorCountryLabel}" Target="{Binding ElementName=Country}" />
+				<TextBox Name="Country" Text="{Binding Settings.Country}" MinWidth="40" ToolTip="{DynamicResource LOCCalculatorCountryToolTip}"/>
+				<TextBlock Style="{StaticResource BasicTextBlock}">
 				<Hyperlink NavigateUri="https://wikipedia.org/wiki/ISO_3166-1#Codes" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
 					<Run Text="{DynamicResource LOCCalculatorCountryTableLinkText}" />
 				</Hyperlink>
-			</TextBlock>
+				</TextBlock>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<Label Content="{DynamicResource LOCCalculatorPlaytimeFormatLabel}" Target="{Binding ElementName=PlaytimeFormat}" />
+				<TextBox Name="PlaytimeFormat" MinWidth="300" Text="{Binding Settings.PlaytimeFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				<Button Content="{DynamicResource LOCCalculatorResetFormat}" Command="{Binding ResetPlaytimeFormat}" />
+				<TextBlock Style="{StaticResource BasicTextBlock}">
+			<Hyperlink NavigateUri="https://github.com/CarrieForle/PlayniteCalculator/wiki/Playtime-Format" Command="{x:Static local:Commands.NavigateUri}" CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+				<Run Text="{DynamicResource LOCCalculatorPlaytimeFormatHelpLinkText}" />
+			</Hyperlink>
+				</TextBlock>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorPreviewFormatLabel}"/>
+				<TextBlock Style="{StaticResource BasicTextBlock}" Text="{Binding PlaytimeFormatted, Mode=OneWay}" />
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<Label Content="{DynamicResource LOCCalculatorAutomaticUpdateLabel}" Target="{Binding ElementName=AutomaticUpdate}" />
+				<ComboBox Name="AutomaticUpdate" SelectedItem="{Binding Settings.AutomaticUpdate}" ItemsSource="{Binding AutomaticUpdateValues, Mode=OneTime}" MinWidth="100" />
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<CheckBox IsChecked="{Binding Settings.DarkMode}" Content="{DynamicResource LOCCalculatorDarkModeCheckbox}" ToolTip="{DynamicResource LOCCalculatorDarkModeCheckboxToolTip}" ToolTipService.InitialShowDelay="0" />
+			</StackPanel>
+			<TextBlock Style="{StaticResource BasicTextBlock}" Text="{DynamicResource LOCCalculatorSettingsNotice}" HorizontalAlignment="Left" />
 		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorPlaytimeLabel}" Target="{Binding ElementName=Playtime}" />
-			<ComboBox Name="Playtime" SelectedItem="{Binding Settings.PlaytimeDisplayFormat}" ItemsSource="{Binding PlaytimeValues, Mode=OneTime}" MinWidth="100" />
-			<CheckBox Content="{DynamicResource LOCCalculatorPlaytimePaddingZero}" IsChecked="{Binding Settings.PlaytimePaddingZero}" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Label Content="{DynamicResource LOCCalculatorAutomaticUpdateLabel}" Target="{Binding ElementName=AutomaticUpdate}" />
-			<ComboBox Name="AutomaticUpdate" SelectedItem="{Binding Settings.AutomaticUpdate}" ItemsSource="{Binding AutomaticUpdateValues, Mode=OneTime}" MinWidth="100" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<CheckBox IsChecked="{Binding Settings.DarkMode}" Content="{DynamicResource LOCCalculatorDarkModeCheckbox}" ToolTip="{DynamicResource LOCCalculatorDarkModeCheckboxToolTip}" ToolTipService.InitialShowDelay="0" />
-		</StackPanel>
-	</StackPanel>
+	</ScrollViewer>
 </UserControl>

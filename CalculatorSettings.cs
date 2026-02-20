@@ -11,13 +11,13 @@ namespace Calculator
 
 	public class CalculatorSettings : ObservableObject
 	{
-		public const string DEFAULT_MONEY_FORMAT = "${0:N2}";
+		public const string DEFAULT_PLAYTIME_FORMAT = @"{2:0}h {0:%m}m";
+		public const string DEFAULT_MONEY_FORMAT = @"${0:N2}";
 		public const string DEFAULT_COUNTRY = "US";
 		private string moneyFormat = DEFAULT_MONEY_FORMAT;
 		private string country = DEFAULT_COUNTRY;
-		private bool paddingZero = true;
 		private bool darkMode = true;
-		private PlaytimeDisplayFormat playtimeFormat = PlaytimeDisplayFormat.HourMinute;
+		private string playtimeFormat = DEFAULT_PLAYTIME_FORMAT;
 		private AutomaticUpdate automaticUpdate = AutomaticUpdate.OnEnteringView;
 
 		public string MoneyFormat
@@ -46,19 +46,13 @@ namespace Calculator
 			}
 		}
 
-		public bool PlaytimePaddingZero
-		{
-			get => paddingZero;
-			set => SetValue(ref paddingZero, value);
-		}
-
 		public bool DarkMode
 		{
 			get => darkMode;
 			set => SetValue(ref darkMode, value);
 		}
 
-		public PlaytimeDisplayFormat PlaytimeDisplayFormat
+		public string PlaytimeFormat
 		{
 			get => playtimeFormat;
 			set => SetValue(ref playtimeFormat, value);
@@ -75,7 +69,8 @@ namespace Calculator
 	{
 		private readonly Calculator plugin;
 		private CalculatorSettings backup { get; set; }
-		public RelayCommand ResetFormat { get; }
+		public RelayCommand ResetMoneyFormat { get; }
+		public RelayCommand ResetPlaytimeFormat { get; }
 
 		private CalculatorSettings settings;
 		public CalculatorSettings Settings
@@ -99,9 +94,14 @@ namespace Calculator
 				Settings = new CalculatorSettings();
 			}
 
-			ResetFormat = new RelayCommand(() =>
+			ResetMoneyFormat = new RelayCommand(() =>
 			{
 				Settings.MoneyFormat = DEFAULT_MONEY_FORMAT;
+			});
+
+			ResetPlaytimeFormat = new RelayCommand(() =>
+			{
+				Settings.PlaytimeFormat = DEFAULT_PLAYTIME_FORMAT;
 			});
 		}
 
@@ -140,6 +140,14 @@ namespace Calculator
 			{
 				errors.Add($"{ResourceProvider.GetString("LOCCalculatorCountryLabel")} {ResourceProvider.GetString("LOCCalculatorCountryInvalidLength")}");
 			}
+			try
+			{
+				PlaytimeToString(Settings.PlaytimeFormat, new TimeSpan(1, 2, 3, 4));
+			}
+			catch
+			{
+				errors.Add($"{ResourceProvider.GetString("LOCCalculatorPlaytimeFormatLabel")} {ResourceProvider.GetString("LOCCalculatorInvalidFormat")}");
+			}
 
 			return !errors.HasItems();
 		}
@@ -159,16 +167,34 @@ namespace Calculator
 			}
 		}
 
-		public IEnumerable<PlaytimeDisplayFormat> PlaytimeValues { get; } = (PlaytimeDisplayFormat[])Enum.GetValues(typeof(PlaytimeDisplayFormat));
+		public string PlaytimeFormatted
+		{
+			get
+			{
+				try
+				{
+					var ts = new TimeSpan(1, 2, 3, 4);
+					return PlaytimeToString(Settings.PlaytimeFormat, ts);
+				}
+				catch
+				{
+					return ResourceProvider.GetString("LOCCalculatorInvalidFormat");
+				}
+			}
+		}
+
 		public IEnumerable<AutomaticUpdate> AutomaticUpdateValues { get; } = (AutomaticUpdate[])Enum.GetValues(typeof(AutomaticUpdate));
 
-		// Need this in order to place MoneyFormatted here.
+		// Need this in order to place formatted string here.
 		private void ReactOnSettingsChanged(object sender, PropertyChangedEventArgs eventArgs)
 		{
 			switch (eventArgs.PropertyName)
 			{
 				case nameof(Settings.MoneyFormat):
 					OnPropertyChanged(nameof(MoneyFormatted));
+					break;
+				case nameof(Settings.PlaytimeFormat):
+					OnPropertyChanged(nameof(PlaytimeFormatted));
 					break;
 			}
 		}

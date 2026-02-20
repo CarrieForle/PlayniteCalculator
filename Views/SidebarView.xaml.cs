@@ -1,6 +1,7 @@
 using CommonPluginsShared.Controls;
 using Playnite.SDK;
 using Playnite.SDK.Models;
+using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -20,7 +21,7 @@ namespace Calculator
 	{
 		private readonly Calculator plugin;
 		public CalculatorSettings Settings { get; }
-		public IPlayniteAPI PlayniteApi { get; }
+		public IPlayniteAPI PlayniteApi => plugin.PlayniteApi;
 		private SidebarViewObject model;
 		public SidebarViewObject Model 
 		{ 
@@ -211,14 +212,13 @@ namespace Calculator
 			}
 		}
 
-		private SidebarView(Calculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject model)
+		private SidebarView(Calculator plugin, CalculatorSettings settings, SidebarViewObject model)
 		{
 			this.plugin = plugin;
 			Settings = settings;
-			PlayniteApi = api;
 			Model = model;
 
-			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeDisplayFormat, Settings.PlaytimePaddingZero);
+			var playtimeConverter = new PlaytimeConverter(Settings.PlaytimeFormat);
 			var moneyFormatConverter = new MoneyFormatConverter(Settings.MoneyFormat);
 			Resources["PlaytimeConverter"] = playtimeConverter;
 			Resources["MoneyFormatConverter"] = moneyFormatConverter;
@@ -282,9 +282,9 @@ namespace Calculator
 			PlayedGamesRatio = (double)PlayedGames.Length / Games.Count;
 		}
 
-		public static UserControl Create(Calculator plugin, CalculatorSettings settings, IPlayniteAPI api, SidebarViewObject historicalLows)
+		public static UserControl Create(Calculator plugin, CalculatorSettings settings, SidebarViewObject historicalLows)
 		{
-			var instance = new SidebarView(plugin, settings, api, historicalLows);
+			var instance = new SidebarView(plugin, settings, historicalLows);
 			var control = new SidebarItemControl();
 			control.SetTitle(ResourceProvider.GetString("LOCCalculator"));
 			control.AddContent(instance);
@@ -293,9 +293,9 @@ namespace Calculator
 				Content = ResourceProvider.GetString("LOCCalculatorSidebarRefresh"),
 				Command = new RelayCommand(() =>
 				{
-					var res = api.Dialogs.ActivateGlobalProgress(async (args) =>
+					var res = plugin.PlayniteApi.Dialogs.ActivateGlobalProgress(async (args) =>
 					{
-						instance.Model = await plugin.GetPrice(api.Database.Games, args.CancelToken);
+						instance.Model = await plugin.GetPrice(plugin.PlayniteApi.Database.Games, args.CancelToken);
 						instance.SetGamesPlayedInfo();
 					}, new GlobalProgressOptions(ResourceProvider.GetString("LOCCalculatorItadRequestDialog"), true));
 
@@ -516,19 +516,17 @@ namespace Calculator
 	[ValueConversion(typeof(ulong), typeof(string))]
 	public class PlaytimeConverter : IValueConverter
 	{
-		private readonly PlaytimeDisplayFormat mode;
-		private readonly bool paddingZero = false;
+		private readonly string format;
 
-		public PlaytimeConverter(PlaytimeDisplayFormat mode, bool paddingZero)
+		public PlaytimeConverter(string format)
 		{
-			this.mode = mode;
-			this.paddingZero = paddingZero;
+			this.format = format;
 		}
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			ulong seconds = (ulong)value;
-			return PlaytimeToString(mode, paddingZero, seconds);
+			return PlaytimeToString(format, seconds);
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
